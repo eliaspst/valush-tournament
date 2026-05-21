@@ -5,20 +5,16 @@ function Homepage() {
     <div className="homepage">
       <section className="homepage-hero">
         <div className="homepage-video-wrapper">
-          <video
-            className="homepage-video"
-            src="/videos/opener.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-          >
-            Dein Browser unterstützt keine Videos.
-          </video>
+          <img
+            className="homepage-real-image"
+            src={`${process.env.PUBLIC_URL}/MainBild.jpg`}
+            alt="Team mit der meisten Aura"
+          />
 
           <div className="homepage-video-overlay">
-            <p className="homepage-kicker">Valush präsentiert</p>
-            <h1>Das zweite offizielle Bierpong Tunier</h1>
+            <p className="homepage-kicker">THE TABLE IS READY</p>
+            <h1>Valush Bierpong Tunier 2026
+            </h1>
             <p className="homepage-hero-text">
               Ob Anfänger(Mato) oder Profi, hier ist für jeden etwas dabei. 
             </p>
