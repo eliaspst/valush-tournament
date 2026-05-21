@@ -1,13 +1,12 @@
+import "./App.css";
 import NavBar from "./NavBar/NavBar";
+import Homepage from "./Pages/Homepage";
 
 function App() {
   return (
     <>
       <NavBar />
-
-      <main style={{ paddingTop: "120px" }}>
-        <h1>Valush Tournament</h1>
-      </main>
+      <Homepage />
     </>
   );
 }

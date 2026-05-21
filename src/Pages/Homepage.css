@@ -1,0 +1,476 @@
+.homepage {
+  min-height: 100vh;
+  background-color: #020403;
+  color: #ffffff;
+  font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ---------------- HERO / VIDEO OPENER ---------------- */
+
+.homepage-hero {
+  min-height: 100vh;
+  padding: 120px 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at top, rgba(34, 197, 94, 0.28), transparent 35%),
+    linear-gradient(180deg, #020403 0%, #06140b 55%, #020403 100%);
+  box-sizing: border-box;
+}
+
+.homepage-video-wrapper {
+  position: relative;
+  width: min(1100px, 100%);
+  height: 620px;
+  border-radius: 32px;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(34, 197, 94, 0.25), rgba(0, 0, 0, 0.95)),
+    #07110a;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.homepage-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0.62;
+}
+
+.homepage-video-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.72) 100%
+  );
+  box-sizing: border-box;
+}
+
+.homepage-kicker {
+  margin: 0 0 12px;
+  color: #22c55e;
+  font-size: 14px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.homepage-video-overlay h1 {
+  margin: 0;
+  max-width: 780px;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: 0.95;
+  letter-spacing: -0.06em;
+}
+
+.homepage-hero-text {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: #d8f5df;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+/* ---------------- GENERAL INFO ---------------- */
+
+.homepage-info-section {
+  padding: 110px 24px;
+  background-color: #020403;
+}
+
+.homepage-section-content {
+  width: min(1100px, 100%);
+  margin: 0 auto;
+}
+
+.homepage-section-content h2 {
+  margin: 0 0 36px;
+  font-size: clamp(36px, 5vw, 64px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.homepage-info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.homepage-info-card {
+  min-height: 220px;
+  padding: 28px;
+  border-radius: 26px;
+  background:
+    linear-gradient(145deg, rgba(34, 197, 94, 0.15), rgba(255, 255, 255, 0.03)),
+    #07110a;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  box-sizing: border-box;
+}
+
+.homepage-info-card h3 {
+  margin: 0 0 14px;
+  color: #ffffff;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.homepage-info-card p {
+  margin: 0;
+  color: #b9cfc0;
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* ---------------- TOURNAMENT TREE ---------------- */
+
+.homepage-tree-section {
+  padding: 70px 24px 120px;
+  background:
+    linear-gradient(180deg, #020403 0%, #07110a 50%, #020403 100%);
+}
+
+.homepage-tree-image {
+  position: relative;
+  width: min(1100px, 100%);
+  height: 560px;
+  margin: 0 auto;
+  border-radius: 32px;
+  overflow: hidden;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.55);
+  background-color: #07110a;
+}
+
+.homepage-image-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    linear-gradient(135deg, rgba(34, 197, 94, 0.35), rgba(0, 0, 0, 0.78)),
+    repeating-linear-gradient(
+      45deg,
+      rgba(255, 255, 255, 0.06) 0,
+      rgba(255, 255, 255, 0.06) 10px,
+      transparent 10px,
+      transparent 20px
+    );
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.homepage-tree-overlay {
+  position: absolute;
+  inset: 0;
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.86) 0%,
+    rgba(0, 0, 0, 0.48) 45%,
+    rgba(0, 0, 0, 0.12) 100%
+  );
+  box-sizing: border-box;
+}
+
+.homepage-tree-overlay h2 {
+  max-width: 620px;
+  margin: 0 0 18px;
+  font-size: clamp(40px, 6vw, 72px);
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.homepage-tree-overlay p {
+  max-width: 520px;
+  margin: 0 0 28px;
+  color: #d8f5df;
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.homepage-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: 999px;
+  background-color: #22c55e;
+  color: #020403;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 800;
+  transition:
+    transform 0.25s ease,
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+  box-shadow: 0 14px 40px rgba(34, 197, 94, 0.35);
+}
+
+.homepage-button:hover {
+  transform: translateY(-3px);
+  background-color: #4ade80;
+  box-shadow: 0 18px 50px rgba(34, 197, 94, 0.5);
+}
+
+/* ---------------- HALL OF FAME ---------------- */
+
+.homepage-winners-section {
+  padding: 110px 24px 140px;
+  background-color: #020403;
+}
+
+.homepage-highlights-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 36px;
+  align-items: start;
+}
+
+.homepage-highlight-block {
+  margin-top: 24px;
+  min-width: 0;
+}
+
+.homepage-highlight-block h3 {
+  margin: 0 0 20px;
+  color: #ffffff;
+  font-size: clamp(28px, 3vw, 42px);
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.homepage-winner-image,
+.homepage-aura-image {
+  width: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  background-color: transparent;
+  border: none;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.homepage-real-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 28px;
+}
+
+/* ---------------- TABLET ---------------- */
+
+@media (max-width: 900px) {
+  .homepage-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .homepage-video-wrapper {
+    height: 520px;
+  }
+
+  .homepage-tree-image {
+    height: 520px;
+  }
+
+  .homepage-video-overlay,
+  .homepage-tree-overlay {
+    padding: 36px;
+  }
+
+  .homepage-highlights-grid {
+    grid-template-columns: 1fr;
+    gap: 42px;
+  }
+}
+
+/* ---------------- MOBILE ---------------- */
+
+@media (max-width: 768px) {
+  .homepage-hero {
+    min-height: 100svh;
+    padding: 96px 14px 32px;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .homepage-video-wrapper {
+    width: 100%;
+    height: calc(100svh - 130px);
+    min-height: 500px;
+    max-height: 680px;
+    border-radius: 26px;
+  }
+
+  .homepage-video-overlay {
+    padding: 28px;
+    justify-content: flex-end;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.05) 0%,
+      rgba(0, 0, 0, 0.35) 38%,
+      rgba(0, 0, 0, 0.9) 100%
+    );
+  }
+
+  .homepage-kicker {
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    margin-bottom: 10px;
+  }
+
+  .homepage-video-overlay h1 {
+    font-size: clamp(42px, 13vw, 64px);
+    line-height: 0.95;
+    letter-spacing: -0.06em;
+  }
+
+  .homepage-hero-text {
+    margin-top: 18px;
+    font-size: 19px;
+    line-height: 1.45;
+    max-width: 100%;
+  }
+
+  .homepage-info-section {
+    padding: 76px 14px;
+  }
+
+  .homepage-section-content h2 {
+    font-size: clamp(34px, 11vw, 52px);
+    margin-bottom: 24px;
+  }
+
+  .homepage-info-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .homepage-info-card {
+    min-height: auto;
+    padding: 24px;
+    border-radius: 22px;
+  }
+
+  .homepage-info-card h3 {
+    font-size: 26px;
+  }
+
+  .homepage-info-card p {
+    font-size: 16px;
+  }
+
+  .homepage-tree-section {
+    padding: 36px 14px 80px;
+  }
+
+  .homepage-tree-image {
+    height: 520px;
+    border-radius: 26px;
+  }
+
+  .homepage-tree-overlay {
+    padding: 28px;
+    justify-content: flex-end;
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.45) 42%,
+      rgba(0, 0, 0, 0.92) 100%
+    );
+  }
+
+  .homepage-tree-overlay h2 {
+    font-size: clamp(38px, 12vw, 58px);
+  }
+
+  .homepage-tree-overlay p {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .homepage-button {
+    width: 100%;
+    min-height: 54px;
+    font-size: 16px;
+  }
+
+  .homepage-winners-section {
+    padding: 76px 14px 96px;
+  }
+
+  .homepage-highlights-grid {
+    grid-template-columns: 1fr;
+    gap: 38px;
+  }
+
+  .homepage-highlight-block {
+    margin-top: 24px;
+  }
+
+  .homepage-highlight-block h3 {
+    font-size: clamp(28px, 9vw, 42px);
+    line-height: 1.05;
+    margin-bottom: 16px;
+  }
+
+  .homepage-winner-image,
+  .homepage-aura-image,
+  .homepage-real-image {
+    border-radius: 22px;
+  }
+
+  .homepage-image-placeholder {
+    min-height: 320px;
+    padding: 24px;
+    box-sizing: border-box;
+    font-size: 15px;
+  }
+}
+
+/* ---------------- SMALL MOBILE ---------------- */
+
+@media (max-width: 420px) {
+  .homepage-hero {
+    padding-top: 88px;
+  }
+
+  .homepage-video-wrapper {
+    min-height: 500px;
+    height: calc(100svh - 120px);
+  }
+
+  .homepage-video-overlay {
+    padding: 24px;
+  }
+
+  .homepage-video-overlay h1 {
+    font-size: 44px;
+  }
+
+  .homepage-hero-text {
+    font-size: 18px;
+  }
+
+  .homepage-tree-image {
+    height: 390px;
+  }
+}
