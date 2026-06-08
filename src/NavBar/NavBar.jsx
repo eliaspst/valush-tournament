@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { GoArrowUpRight } from "react-icons/go";
+import { Link } from "react-router-dom";
 import "./NavBar.css";
 
 const defaultItems = [
@@ -9,18 +10,38 @@ const defaultItems = [
     bgColor: "#111111",
     textColor: "#ffffff",
     links: [
-      { label: "Matches", href: "#matches", ariaLabel: "Go to matches" },
-      { label: "Teams", href: "#teams", ariaLabel: "Go to teams" },
-      { label: "Leaderboard", href: "#leaderboard", ariaLabel: "Go to leaderboard" }
+      {
+        label: "Home",
+        to: "/",
+        ariaLabel: "Go to homepage"
+      },
+      {
+        label: "Turnierbaum",
+        to: "/turnierbaum",
+        ariaLabel: "Go to tournament tree"
+      },
+      {
+        label: "Gruppenphase",
+        to: "/turnierbaum",
+        ariaLabel: "Go to group stage"
+      }
     ]
   },
   {
     label: "Host",
-    bgColor: "#2563eb",
+    bgColor: "#14532d",
     textColor: "#ffffff",
     links: [
-      { label: "Enter results", href: "#admin", ariaLabel: "Enter match results" },
-      { label: "Manage teams", href: "#manage-teams", ariaLabel: "Manage teams" }
+      {
+        label: "Ergebnisse eintragen",
+        href: "host",
+        ariaLabel: "Enter match results"
+      },
+      {
+        label: "Teams verwalten",
+        href: "#manage-teams",
+        ariaLabel: "Manage teams"
+      }
     ]
   },
   {
@@ -28,8 +49,16 @@ const defaultItems = [
     bgColor: "#f3f4f6",
     textColor: "#111111",
     links: [
-      { label: "Rules", href: "#rules", ariaLabel: "Read tournament rules" },
-      { label: "Schedule", href: "#schedule", ariaLabel: "View schedule" }
+      {
+        label: "Regeln",
+        href: "#rules",
+        ariaLabel: "Read tournament rules"
+      },
+      {
+        label: "Zeitplan",
+        href: "#schedule",
+        ariaLabel: "View schedule"
+      }
     ]
   }
 ];
@@ -176,8 +205,48 @@ function NavBar({
     }
   };
 
+  const closeMenu = () => {
+    const tl = tlRef.current;
+
+    if (!tl || !isExpanded) return;
+
+    setIsHamburgerOpen(false);
+    tl.eventCallback("onReverseComplete", () => setIsExpanded(false));
+    tl.reverse();
+  };
+
   const setCardRef = (i) => (el) => {
     if (el) cardsRef.current[i] = el;
+  };
+
+  const renderNavLink = (lnk, i) => {
+    if (lnk.to) {
+      return (
+        <Link
+          key={`${lnk.label}-${i}`}
+          className="nav-card-link"
+          to={lnk.to}
+          aria-label={lnk.ariaLabel}
+          onClick={closeMenu}
+        >
+          <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
+          {lnk.label}
+        </Link>
+      );
+    }
+
+    return (
+      <a
+        key={`${lnk.label}-${i}`}
+        className="nav-card-link"
+        href={lnk.href}
+        aria-label={lnk.ariaLabel}
+        onClick={closeMenu}
+      >
+        <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
+        {lnk.label}
+      </a>
+    );
   };
 
   return (
@@ -200,21 +269,22 @@ function NavBar({
             <div className="hamburger-line" />
           </div>
 
-          <div className="logo-container">
+          <Link className="logo-container" to="/" onClick={closeMenu}>
             {logo ? (
               <img src={logo} alt={logoAlt} className="logo" />
             ) : (
               <span className="logo-text">Valush</span>
             )}
-          </div>
+          </Link>
 
-          <a
-            href="#admin"
+          <Link
+            to="/turnierbaum"
             className="card-nav-cta-button"
             style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
+            onClick={closeMenu}
           >
-            Host
-          </a>
+            Bracket
+          </Link>
         </div>
 
         <div className="card-nav-content" aria-hidden={!isExpanded}>
@@ -228,17 +298,7 @@ function NavBar({
               <div className="nav-card-label">{item.label}</div>
 
               <div className="nav-card-links">
-                {item.links?.map((lnk, i) => (
-                  <a
-                    key={`${lnk.label}-${i}`}
-                    className="nav-card-link"
-                    href={lnk.href}
-                    aria-label={lnk.ariaLabel}
-                  >
-                    <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
-                    {lnk.label}
-                  </a>
-                ))}
+                {item.links?.map((lnk, i) => renderNavLink(lnk, i))}
               </div>
             </div>
           ))}
