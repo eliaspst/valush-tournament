@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import NavBar from "./NavBar/NavBar";
 import Homepage from "./Pages/Homepage";
 import TournamentTree from "./Pages/TournamentTree";
@@ -6,7 +6,7 @@ import HostPanel from "./Pages/HostPanel";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <NavBar />
 
       <Routes>
@@ -14,7 +14,7 @@ function App() {
         <Route path="/turnierbaum" element={<TournamentTree />} />
         <Route path="/host" element={<HostPanel />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
