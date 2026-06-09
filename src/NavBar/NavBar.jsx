@@ -4,6 +4,8 @@ import { GoArrowUpRight } from "react-icons/go";
 import { Link } from "react-router-dom";
 import "./NavBar.css";
 
+const beerpongLogo = `${process.env.PUBLIC_URL}/beerpong_ausgeschnitten.png`;
+
 const defaultItems = [
   {
     label: "Tournament",
@@ -64,8 +66,8 @@ const defaultItems = [
 ];
 
 function NavBar({
-  logo,
-  logoAlt = "Valush Tournament",
+  logo = beerpongLogo,
+  logoAlt = "Beer Pong Home",
   items = defaultItems,
   className = "",
   ease = "power3.out",
@@ -254,12 +256,13 @@ function NavBar({
             <div className="hamburger-line" />
           </div>
 
-          <Link className="logo-container" to="/" onClick={closeMenu}>
-            {logo ? (
-              <img src={logo} alt={logoAlt} className="logo" />
-            ) : (
-              <span className="logo-text">Valush</span>
-            )}
+          <Link
+            className="logo-container"
+            to="/"
+            onClick={closeMenu}
+            aria-label="Go to homepage"
+          >
+            <img src={logo} alt={logoAlt} className="logo" />
           </Link>
 
           <Link

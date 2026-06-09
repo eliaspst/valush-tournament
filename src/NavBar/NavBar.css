@@ -230,4 +230,20 @@
   .nav-card-link {
     font-size: 15px;
   }
+
+  .logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  width: 72px;
+  text-decoration: none;
+}
+
+.logo {
+  width: 64px;
+  height: 52px;
+  object-fit: contain;
+  display: block;
+}
 }
