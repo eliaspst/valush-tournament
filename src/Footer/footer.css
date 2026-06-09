@@ -1,0 +1,235 @@
+.site-footer {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-top: 0;
+  padding: 90px 0 34px;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(34, 197, 94, 0.12), transparent 34%),
+    radial-gradient(circle at 88% 20%, rgba(34, 197, 94, 0.08), transparent 30%),
+    #050907;
+  border-top: 1px solid rgba(34, 197, 94, 0.22);
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.site-footer-inner {
+  width: calc(100% - 96px);
+  max-width: 1220px;
+  margin: 0 auto;
+}
+
+.footer-partner-row {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+.footer-label {
+  color: #22c55e;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.footer-partners {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-partners span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.88);
+  font-weight: 700;
+  border: 1px solid rgba(34, 197, 94, 0.38);
+  background: rgba(34, 197, 94, 0.055);
+}
+
+.footer-line {
+  width: 100%;
+  height: 1px;
+  margin: 28px 0;
+  background: linear-gradient(
+    90deg,
+    rgba(34, 197, 94, 0.34),
+    rgba(255, 255, 255, 0.08),
+    rgba(34, 197, 94, 0.18)
+  );
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: 1.25fr 0.8fr 0.8fr 1fr;
+  gap: 64px;
+}
+
+.footer-column h3 {
+  margin: 0 0 18px;
+  color: #ffffff;
+  font-size: 1.28rem;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.footer-column p {
+  max-width: 360px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.footer-links {
+  display: grid;
+  gap: 10px;
+}
+
+.footer-links a {
+  width: fit-content;
+  color: rgba(255, 255, 255, 0.64);
+  text-decoration: none;
+  font-size: 1rem;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #22c55e;
+  transform: translateX(4px);
+}
+
+.footer-info {
+  display: grid;
+  gap: 13px;
+}
+
+.footer-info div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.footer-info span {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+.footer-info strong {
+  color: #ffffff;
+}
+
+.footer-contact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.footer-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  margin-bottom: 18px;
+  padding: 0 16px;
+  border-radius: 14px;
+  color: #22c55e;
+  font-weight: 800;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  background: rgba(34, 197, 94, 0.07);
+}
+
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.footer-bottom p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.95rem;
+}
+
+.footer-host-link {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.92rem;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px dotted rgba(34, 197, 94, 0.55);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.footer-host-link:hover {
+  color: #22c55e;
+  border-color: #22c55e;
+}
+
+@media (max-width: 980px) {
+  .site-footer {
+    margin-top: 0;
+    padding: 70px 0 30px;
+  }
+
+  .site-footer-inner {
+    width: calc(100% - 48px);
+  }
+
+  .footer-main {
+    grid-template-columns: 1fr 1fr;
+    gap: 42px;
+  }
+}
+
+@media (max-width: 620px) {
+  .site-footer {
+    margin-top: 0;
+    padding: 58px 0 26px;
+  }
+
+  .site-footer-inner {
+    width: calc(100% - 28px);
+  }
+
+  .footer-partner-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .footer-partners {
+    gap: 10px;
+  }
+
+  .footer-partners span {
+    min-height: 31px;
+    padding: 0 13px;
+    font-size: 0.9rem;
+  }
+
+  .footer-main {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+
+  .footer-column h3 {
+    margin-bottom: 12px;
+  }
+
+  .footer-bottom {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .footer-host-link {
+    align-self: flex-end;
+  }
+}

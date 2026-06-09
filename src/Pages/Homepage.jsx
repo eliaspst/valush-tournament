@@ -12,7 +12,6 @@ function Homepage() {
           />
 
           <div className="homepage-video-overlay">
-            <p className="homepage-kicker">THE TABLE IS READY</p>
             <h1>Valush Bierpong Tunier 2026
             </h1>
             <p className="homepage-hero-text">
@@ -68,7 +67,7 @@ function Homepage() {
               Sieh dir alle Begegnungen, Runden und Gewinner im Turnierbaum an.
             </p>
 
-            <a className="homepage-button" href="#tournament-tree">
+            <a className="homepage-button" href="#/turnierbaum">
               Turnierbaum öffnen
             </a>
           </div>

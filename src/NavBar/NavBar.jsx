@@ -29,40 +29,8 @@ const defaultItems = [
       }
     ]
   },
-  {
-    label: "Host",
-    bgColor: "#14532d",
-    textColor: "#ffffff",
-    links: [
-      {
-        label: "Ergebnisse eintragen",
-        to: "/host",
-        ariaLabel: "Enter match results"
-      },
-      {
-        label: "Teams verwalten",
-        to: "/host",
-        ariaLabel: "Manage teams"
-      }
-    ]
-  },
-  {
-    label: "Info",
-    bgColor: "#f3f4f6",
-    textColor: "#111111",
-    links: [
-      {
-        label: "Regeln",
-        to: "/turnierbaum",
-        ariaLabel: "Read tournament rules"
-      },
-      {
-        label: "Zeitplan",
-        to: "/turnierbaum",
-        ariaLabel: "View schedule"
-      }
-    ]
-  }
+  
+
 ];
 
 function NavBar({
@@ -271,7 +239,7 @@ function NavBar({
             style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}
             onClick={closeMenu}
           >
-            Bracket
+            Ergebnisse
           </Link>
         </div>
 
