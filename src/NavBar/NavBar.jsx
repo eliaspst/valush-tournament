@@ -34,12 +34,12 @@ const defaultItems = [
     links: [
       {
         label: "Ergebnisse eintragen",
-        href: "host",
+        to: "/host",
         ariaLabel: "Enter match results"
       },
       {
         label: "Teams verwalten",
-        href: "#manage-teams",
+        to: "/host",
         ariaLabel: "Manage teams"
       }
     ]
@@ -51,12 +51,12 @@ const defaultItems = [
     links: [
       {
         label: "Regeln",
-        href: "#rules",
+        to: "/turnierbaum",
         ariaLabel: "Read tournament rules"
       },
       {
         label: "Zeitplan",
-        href: "#schedule",
+        to: "/turnierbaum",
         ariaLabel: "View schedule"
       }
     ]
@@ -220,32 +220,17 @@ function NavBar({
   };
 
   const renderNavLink = (lnk, i) => {
-    if (lnk.to) {
-      return (
-        <Link
-          key={`${lnk.label}-${i}`}
-          className="nav-card-link"
-          to={lnk.to}
-          aria-label={lnk.ariaLabel}
-          onClick={closeMenu}
-        >
-          <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
-          {lnk.label}
-        </Link>
-      );
-    }
-
     return (
-      <a
+      <Link
         key={`${lnk.label}-${i}`}
         className="nav-card-link"
-        href={lnk.href}
+        to={lnk.to || "/"}
         aria-label={lnk.ariaLabel}
         onClick={closeMenu}
       >
         <GoArrowUpRight className="nav-card-link-icon" aria-hidden="true" />
         {lnk.label}
-      </a>
+      </Link>
     );
   };
 
