@@ -12,6 +12,11 @@ function Homepage() {
           />
 
           <div className="homepage-video-overlay">
+            
+              <p className="homepage-hero-kicker-green">
+              THE TABLES ARE READY
+            </p>
+
             <h1>Valush Bierpong Tunier 2026
             </h1>
             <p className="homepage-hero-text">
@@ -88,18 +93,6 @@ function Homepage() {
             className="homepage-real-image"
             src={`${process.env.PUBLIC_URL}/TeamGewinner.jpg`}
             alt="Gewinner vom letzten Jahr"
-          />
-        </div>
-      </div>
-
-      <div className="homepage-highlight-block">
-        <h3>Team mit der meisten Aura</h3>
-
-        <div className="homepage-aura-image">
-          <img
-            className="homepage-real-image"
-            src={`${process.env.PUBLIC_URL}/TeamAura.jpg`}
-            alt="Team mit der meisten Aura"
           />
         </div>
       </div>

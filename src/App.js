@@ -4,6 +4,7 @@ import Homepage from "./Pages/Homepage";
 import TournamentTree from "./Pages/TournamentTree";
 import HostPanel from "./Pages/HostPanel";
 import Footer from "./Footer/footer";
+import RulesPage from "./Pages/RulesPages";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/turnierbaum" element={<TournamentTree />} />
+        <Route path="/rules" element={<RulesPage />} />
         <Route path="/host" element={<HostPanel />} />
       </Routes>
       

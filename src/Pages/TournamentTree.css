@@ -533,3 +533,51 @@
     font-size: 12px;
   }
 }
+
+.bracket-team.is-winner {
+  border-color: rgba(0, 255, 102, 0.8);
+  background: rgba(0, 255, 102, 0.18);
+  box-shadow: 0 0 22px rgba(0, 255, 102, 0.22);
+}
+
+.bracket-winner-badge {
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin-top: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #00ff66;
+  color: #041007;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tournament-champion-card {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto 28px;
+  padding: 28px;
+  border-radius: 28px;
+  text-align: center;
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 102, 0.32), transparent 58%),
+    #071108;
+  border: 1px solid rgba(0, 255, 102, 0.45);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+}
+
+.tournament-champion-card p {
+  margin: 0 0 8px;
+  color: #00ff66;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.tournament-champion-card h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  letter-spacing: -0.06em;
+}

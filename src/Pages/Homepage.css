@@ -278,6 +278,16 @@
   border-radius: 28px;
 }
 
+.homepage-hero-kicker-green {
+  margin: 0 0 12px;
+  color: #00ff66;
+  font-size: clamp(0.9rem, 2vw, 1.2rem);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 0 18px rgba(0, 255, 102, 0.75);
+}
+
 /* ---------------- TABLET ---------------- */
 
 @media (max-width: 900px) {

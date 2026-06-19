@@ -1,6 +1,6 @@
 const defaultGroups = [
   {
-    name: "Gruppe A",
+    name: "Gruppe Homogen",
     teams: [
       { name: "Team A1", points: 9 },
       { name: "Team A2", points: 6 },
@@ -9,7 +9,7 @@ const defaultGroups = [
     ]
   },
   {
-    name: "Gruppe B",
+    name: "Gruppe des Schreckens",
     teams: [
       { name: "Team B1", points: 7 },
       { name: "Team B2", points: 7 },
@@ -18,7 +18,7 @@ const defaultGroups = [
     ]
   },
   {
-    name: "Gruppe C",
+    name: "Gruppe 3",
     teams: [
       { name: "Team C1", points: 9 },
       { name: "Team C2", points: 4 },
@@ -27,7 +27,7 @@ const defaultGroups = [
     ]
   },
   {
-    name: "Gruppe D",
+    name: "Gruppe Overdose",
     teams: [
       { name: "Team D1", points: 6 },
       { name: "Team D2", points: 6 },
@@ -36,7 +36,7 @@ const defaultGroups = [
     ]
   },
   {
-    name: "Gruppe E",
+    name: "Gruppe Couple Goals",
     teams: [
       { name: "Team E1", points: 9 },
       { name: "Team E2", points: 6 },
@@ -45,7 +45,7 @@ const defaultGroups = [
     ]
   },
   {
-    name: "Gruppe F",
+    name: "Gruppe Hopfen und Malz verloren",
     teams: [
       { name: "Team F1", points: 8 },
       { name: "Team F2", points: 5 },

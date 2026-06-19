@@ -26,11 +26,14 @@ const defaultItems = [
         label: "Gruppenphase",
         to: "/turnierbaum",
         ariaLabel: "Go to group stage"
+      },
+      {
+        label: "Spielregeln",
+        to: "/rules",
+        ariaLabel: "Go to rules page"
       }
     ]
-  },
-  
-
+  }
 ];
 
 function NavBar({

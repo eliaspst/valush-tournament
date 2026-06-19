@@ -5,12 +5,14 @@ import defaultGroups from "../data/defaultGroups";
 import "./TournamentTree.css";
 
 function createBracketTeam(team, groupName, placement) {
-  const groupLetter = groupName.replace("Gruppe ", "");
+  if (!team) {
+    return createPlaceholderTeam("Offen");
+  }
 
   return {
     name: team.name,
-    points: team.points,
-    seed: `${groupLetter}${placement}`,
+    points: Number(team.points) || 0,
+    seed: placement === 1 ? "1." : "2.",
     groupName
   };
 }
@@ -25,11 +27,127 @@ function createPlaceholderTeam(name) {
 }
 
 function hasPoints(team) {
-  return typeof team.points === "number";
+  return team && typeof team.points === "number";
+}
+
+function isSameTeam(teamA, teamB) {
+  if (!teamA || !teamB) {
+    return false;
+  }
+
+  return teamA.name === teamB.name && teamA.groupName === teamB.groupName;
+}
+
+function getTeamOrPlaceholder(team, placeholderName) {
+  if (!team) {
+    return createPlaceholderTeam(placeholderName);
+  }
+
+  return {
+    name: team.name,
+    points: typeof team.points === "number" ? team.points : null,
+    seed: team.seed || "",
+    groupName: team.groupName || "",
+    placement: team.placement || ""
+  };
+}
+
+function createFallbackBracketRounds(sortedGroups) {
+  const groupWinners = sortedGroups.map((group) =>
+    createBracketTeam(group.teams[0], group.name, 1)
+  );
+
+  const bestSecondPlaces = sortedGroups
+    .map((group) => createBracketTeam(group.teams[1], group.name, 2))
+    .sort((teamA, teamB) => {
+      if (teamB.points !== teamA.points) {
+        return teamB.points - teamA.points;
+      }
+
+      return teamA.name.localeCompare(teamB.name);
+    })
+    .slice(0, 2);
+
+  return [
+    {
+      name: "Viertelfinale",
+      matches: [
+        {
+          id: "preview-qf1",
+          top: groupWinners[0] || createPlaceholderTeam("Offen"),
+          bottom: bestSecondPlaces[0] || createPlaceholderTeam("Offen"),
+          winner: null
+        },
+        {
+          id: "preview-qf2",
+          top: groupWinners[1] || createPlaceholderTeam("Offen"),
+          bottom: bestSecondPlaces[1] || createPlaceholderTeam("Offen"),
+          winner: null
+        },
+        {
+          id: "preview-qf3",
+          top: groupWinners[2] || createPlaceholderTeam("Offen"),
+          bottom: groupWinners[5] || createPlaceholderTeam("Offen"),
+          winner: null
+        },
+        {
+          id: "preview-qf4",
+          top: groupWinners[3] || createPlaceholderTeam("Offen"),
+          bottom: groupWinners[4] || createPlaceholderTeam("Offen"),
+          winner: null
+        }
+      ]
+    },
+    {
+      name: "Halbfinale",
+      matches: [
+        {
+          id: "preview-sf1",
+          top: createPlaceholderTeam("Sieger VF 1"),
+          bottom: createPlaceholderTeam("Sieger VF 2"),
+          winner: null
+        },
+        {
+          id: "preview-sf2",
+          top: createPlaceholderTeam("Sieger VF 3"),
+          bottom: createPlaceholderTeam("Sieger VF 4"),
+          winner: null
+        }
+      ]
+    },
+    {
+      name: "Finale",
+      matches: [
+        {
+          id: "preview-final",
+          top: createPlaceholderTeam("Sieger HF 1"),
+          bottom: createPlaceholderTeam("Sieger HF 2"),
+          winner: null
+        }
+      ]
+    }
+  ];
+}
+
+function createFirebaseBracketRounds(bracket) {
+  if (!bracket || !bracket.rounds) {
+    return [];
+  }
+
+  return bracket.rounds.map((round) => ({
+    name: round.name,
+    matches: round.matches.map((match, index) => ({
+      id: match.id || `${round.name}-${index}`,
+      top: getTeamOrPlaceholder(match.teamA, "Noch offen"),
+      bottom: getTeamOrPlaceholder(match.teamB, "Noch offen"),
+      winner: match.winner || null
+    }))
+  }));
 }
 
 function TournamentTree() {
   const [groups, setGroups] = useState(defaultGroups);
+  const [bracket, setBracket] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [firebaseError, setFirebaseError] = useState("");
 
@@ -44,9 +162,18 @@ function TournamentTree() {
 
           if (tournamentData.groups) {
             setGroups(tournamentData.groups);
+          } else {
+            setGroups(defaultGroups);
+          }
+
+          if (tournamentData.bracket) {
+            setBracket(tournamentData.bracket);
+          } else {
+            setBracket(null);
           }
         } else {
           setGroups(defaultGroups);
+          setBracket(null);
         }
 
         setIsLoading(false);
@@ -77,74 +204,24 @@ function TournamentTree() {
   const sortedGroups = groups.map((group) => ({
     ...group,
     teams: [...group.teams].sort((teamA, teamB) => {
-      if (teamB.points !== teamA.points) {
-        return teamB.points - teamA.points;
+      const pointsA = Number(teamA.points) || 0;
+      const pointsB = Number(teamB.points) || 0;
+
+      if (pointsB !== pointsA) {
+        return pointsB - pointsA;
       }
 
       return teamA.name.localeCompare(teamB.name);
     })
   }));
 
-  const groupWinners = sortedGroups.map((group) =>
-    createBracketTeam(group.teams[0], group.name, 1)
-  );
+  const fallbackBracketRounds = createFallbackBracketRounds(sortedGroups);
+  const firebaseBracketRounds = createFirebaseBracketRounds(bracket);
 
-  const bestSecondPlaces = sortedGroups
-    .map((group) => createBracketTeam(group.teams[1], group.name, 2))
-    .sort((teamA, teamB) => {
-      if (teamB.points !== teamA.points) {
-        return teamB.points - teamA.points;
-      }
-
-      return teamA.name.localeCompare(teamB.name);
-    })
-    .slice(0, 2);
-
-  const bracketRounds = [
-    {
-      name: "Viertelfinale",
-      matches: [
-        {
-          top: groupWinners[0] || createPlaceholderTeam("Offen"),
-          bottom: bestSecondPlaces[0] || createPlaceholderTeam("Offen")
-        },
-        {
-          top: groupWinners[1] || createPlaceholderTeam("Offen"),
-          bottom: bestSecondPlaces[1] || createPlaceholderTeam("Offen")
-        },
-        {
-          top: groupWinners[2] || createPlaceholderTeam("Offen"),
-          bottom: groupWinners[5] || createPlaceholderTeam("Offen")
-        },
-        {
-          top: groupWinners[3] || createPlaceholderTeam("Offen"),
-          bottom: groupWinners[4] || createPlaceholderTeam("Offen")
-        }
-      ]
-    },
-    {
-      name: "Halbfinale",
-      matches: [
-        {
-          top: createPlaceholderTeam("Sieger VF 1"),
-          bottom: createPlaceholderTeam("Sieger VF 2")
-        },
-        {
-          top: createPlaceholderTeam("Sieger VF 3"),
-          bottom: createPlaceholderTeam("Sieger VF 4")
-        }
-      ]
-    },
-    {
-      name: "Finale",
-      matches: [
-        {
-          top: createPlaceholderTeam("Sieger HF 1"),
-          bottom: createPlaceholderTeam("Sieger HF 2")
-        }
-      ]
-    }
-  ];
+  const hasGeneratedBracket = firebaseBracketRounds.length > 0;
+  const bracketRounds = hasGeneratedBracket
+    ? firebaseBracketRounds
+    : fallbackBracketRounds;
 
   return (
     <main className="tournament-page">
@@ -208,11 +285,15 @@ function TournamentTree() {
         <div className="tournament-section-header">
           <p className="tournament-kicker">Knockout Phase</p>
           <h2>Der Weg ins Finale</h2>
-          <p>
-            Für das Viertelfinale qualifizieren sich die 6 Gruppensieger und
-            die 2 besten Zweitplatzierten.
-          </p>
+
         </div>
+
+        {bracket?.champion && (
+          <div className="tournament-champion-card">
+            <p>Turniersieger</p>
+            <h2>{bracket.champion.name}</h2>
+          </div>
+        )}
 
         <div className="bracket-scroll">
           <div className="bracket-board">
@@ -224,34 +305,60 @@ function TournamentTree() {
                   {round.matches.map((match, index) => (
                     <article
                       className="bracket-match"
-                      key={`${round.name}-${index}`}
+                      key={`${round.name}-${match.id}-${index}`}
                     >
                       <p className="match-number">Match {index + 1}</p>
 
-                      <div className="bracket-team">
+                      <div
+                        className={`bracket-team ${
+                          isSameTeam(match.winner, match.top)
+                            ? "is-winner"
+                            : ""
+                        }`}
+                      >
                         <span>
                           {match.top.seed && <em>{match.top.seed}</em>}
                           {match.top.name}
                         </span>
+
                         <strong>
                           {hasPoints(match.top)
                             ? `${match.top.points} Pkt.`
                             : "offen"}
                         </strong>
+
+                        {isSameTeam(match.winner, match.top) && (
+                          <small className="bracket-winner-badge">
+                            Gewinner
+                          </small>
+                        )}
                       </div>
 
                       <div className="match-divider">vs</div>
 
-                      <div className="bracket-team">
+                      <div
+                        className={`bracket-team ${
+                          isSameTeam(match.winner, match.bottom)
+                            ? "is-winner"
+                            : ""
+                        }`}
+                      >
                         <span>
                           {match.bottom.seed && <em>{match.bottom.seed}</em>}
                           {match.bottom.name}
                         </span>
+
                         <strong>
                           {hasPoints(match.bottom)
                             ? `${match.bottom.points} Pkt.`
                             : "offen"}
                         </strong>
+
+                        {isSameTeam(match.winner, match.bottom) && (
+                          <small className="bracket-winner-badge">
+                            Gewinner
+                          </small>
+                        )}
                       </div>
                     </article>
                   ))}
