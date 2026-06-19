@@ -33,26 +33,23 @@ function Homepage() {
 
           <div className="homepage-info-grid">
             <div className="homepage-info-card">
-              <h3>Teams</h3>
+              <h3>Ort</h3>
               <p>
-                Mehrere Teams treten gegeneinander an und kämpfen sich durch den
-                Turnierbaum bis ins Finale.
+                Das Tunier findet in der ... statt.
               </p>
             </div>
 
             <div className="homepage-info-card">
-              <h3>Matches</h3>
+              <h3>Tunierstart</h3>
               <p>
-                Alle Spiele werden übersichtlich angezeigt, damit jeder den aktuellen
-                Stand verfolgen kann.
+                Das Tunier beginnt am 27. Juni 2026 um 13:00 Uhr. Sei pünktlich!
               </p>
             </div>
 
             <div className="homepage-info-card">
-              <h3>Host</h3>
+              <h3>Spielregelen</h3>
               <p>
-                Der Host kann Ergebnisse eintragen und den Fortschritt des Turniers
-                aktuell halten.
+                Alle Regeln findest du in unserem Regelwerk. Dafür klicke: <a href="#/rules">hier</a>
               </p>
             </div>
           </div>

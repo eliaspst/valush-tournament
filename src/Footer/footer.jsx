@@ -25,7 +25,7 @@ export default function Footer() {
 
             <div className="footer-links">
               <Link to="/">Home</Link>
-              <Link to="/turnierbaum">Turnierbaum</Link>
+              <Link to="/rules">Spielregeln</Link>
               <Link to="/turnierbaum">Gruppenphase</Link>
               <Link to="/turnierbaum">Ergebnisse</Link>
             </div>
