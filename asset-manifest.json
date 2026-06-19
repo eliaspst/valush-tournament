@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/valush-tournament/static/css/main.eb287c64.css",
-    "main.js": "/valush-tournament/static/js/main.85f57e14.js",
+    "main.css": "/valush-tournament/static/css/main.4c4192ef.css",
+    "main.js": "/valush-tournament/static/js/main.7c92e897.js",
     "static/js/453.3f890fe3.chunk.js": "/valush-tournament/static/js/453.3f890fe3.chunk.js",
     "index.html": "/valush-tournament/index.html",
-    "main.eb287c64.css.map": "/valush-tournament/static/css/main.eb287c64.css.map",
-    "main.85f57e14.js.map": "/valush-tournament/static/js/main.85f57e14.js.map",
+    "main.4c4192ef.css.map": "/valush-tournament/static/css/main.4c4192ef.css.map",
+    "main.7c92e897.js.map": "/valush-tournament/static/js/main.7c92e897.js.map",
     "453.3f890fe3.chunk.js.map": "/valush-tournament/static/js/453.3f890fe3.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.eb287c64.css",
-    "static/js/main.85f57e14.js"
+    "static/css/main.4c4192ef.css",
+    "static/js/main.7c92e897.js"
   ]
 }
