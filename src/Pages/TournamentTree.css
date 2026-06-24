@@ -53,7 +53,7 @@
 /* ---------------- GROUP STAGE ---------------- */
 
 .group-stage-section {
-  padding: 90px 24px 140px;
+  padding: 90px 24px 90px;
   background-color: #020403;
 }
 
@@ -88,44 +88,98 @@
 /* ---------------- GROUP CARD ---------------- */
 
 .group-card {
+  --group-main-rgb: 34, 197, 94;
+  --group-soft: #86efac;
+  --group-dark: #07110a;
+  min-width: 0;
   padding: 22px;
   border-radius: 28px;
   background:
-    linear-gradient(145deg, rgba(34, 197, 94, 0.15), rgba(255, 255, 255, 0.03)),
-    #07110a;
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.36);
+    radial-gradient(circle at top left, rgba(var(--group-main-rgb), 0.26), transparent 38%),
+    radial-gradient(circle at bottom right, rgba(var(--group-main-rgb), 0.13), transparent 34%),
+    linear-gradient(145deg, rgba(var(--group-main-rgb), 0.16), rgba(255, 255, 255, 0.03)),
+    var(--group-dark);
+  border: 1px solid rgba(var(--group-main-rgb), 0.34);
+  box-shadow:
+    0 22px 70px rgba(0, 0, 0, 0.36),
+    inset 0 0 52px rgba(var(--group-main-rgb), 0.08);
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+.groups-grid > .group-card:nth-child(1) {
+  /* Gruppe Homogen */
+  --group-main-rgb: 154, 94, 43;
+  --group-soft: #d9a66f;
+  --group-dark: #120c07;
+}
+
+.groups-grid > .group-card:nth-child(2) {
+  /* Gruppe des Schreckens */
+  --group-main-rgb: 239, 68, 68;
+  --group-soft: #fca5a5;
+  --group-dark: #140707;
+}
+
+.groups-grid > .group-card:nth-child(3) {
+  /* Gruppe 3 */
+  --group-main-rgb: 56, 189, 248;
+  --group-soft: #bae6fd;
+  --group-dark: #06111a;
+}
+
+.groups-grid > .group-card:nth-child(4) {
+  /* Gruppe Überdosis */
+  --group-main-rgb: 34, 197, 94;
+  --group-soft: #86efac;
+  --group-dark: #07110a;
+}
+
+.groups-grid > .group-card:nth-child(5) {
+  /* Gruppe Couplegoals */
+  --group-main-rgb: 148, 163, 184;
+  --group-soft: #d1d5db;
+  --group-dark: #0d0f12;
+}
+
+.groups-grid > .group-card:nth-child(6) {
+  /* Gruppe Kennenlernen */
+  --group-main-rgb: 234, 179, 8;
+  --group-soft: #fde68a;
+  --group-dark: #141007;
 }
 
 .group-card-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 18px;
 }
 
 .group-card-header h3 {
+  min-width: 0;
   margin: 0;
   color: #ffffff;
   font-size: 30px;
   line-height: 1;
   letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
 }
 
 .group-card-header span {
   flex-shrink: 0;
   padding: 8px 12px;
   border-radius: 999px;
-  background-color: rgba(34, 197, 94, 0.13);
-  border: 1px solid rgba(34, 197, 94, 0.28);
-  color: #86efac;
+  background-color: rgba(var(--group-main-rgb, 34, 197, 94), 0.13);
+  border: 1px solid rgba(var(--group-main-rgb, 34, 197, 94), 0.28);
+  color: var(--group-soft, #86efac);
   font-size: 13px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
-/* ---------------- TABLE ---------------- */
+/* ---------------- GROUP TABLE ---------------- */
 
 .group-table {
   display: flex;
@@ -135,11 +189,11 @@
 
 .group-table-row {
   display: grid;
-  grid-template-columns: 58px 1fr 78px;
+  grid-template-columns: 52px minmax(0, 1fr) 62px 76px 56px;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-height: 56px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: 16px;
   background-color: rgba(255, 255, 255, 0.045);
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -150,18 +204,23 @@
   min-height: 42px;
   background-color: transparent;
   border: none;
-  color: #86efac;
-  font-size: 12px;
+  color: var(--group-soft, #86efac);
+  font-size: 11px;
   font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
 .group-table-row.is-leader {
   background:
-    linear-gradient(135deg, rgba(34, 197, 94, 0.34), rgba(34, 197, 94, 0.1)),
+    linear-gradient(135deg, rgba(var(--group-main-rgb, 34, 197, 94), 0.38), rgba(var(--group-main-rgb, 34, 197, 94), 0.12)),
     rgba(255, 255, 255, 0.06);
-  border-color: rgba(34, 197, 94, 0.45);
+  border-color: rgba(var(--group-main-rgb, 34, 197, 94), 0.5);
+  box-shadow: inset 0 0 28px rgba(var(--group-main-rgb, 34, 197, 94), 0.08);
+}
+
+.group-table-row > span {
+  min-width: 0;
 }
 
 .team-rank {
@@ -171,24 +230,139 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background-color: rgba(34, 197, 94, 0.16);
+  background-color: rgba(var(--group-main-rgb, 34, 197, 94), 0.22);
   color: #ffffff;
   font-weight: 900;
 }
 
 .team-name {
   color: #ffffff;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 800;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.team-points {
+.team-points,
+.team-cups,
+.team-cup-difference {
   justify-self: end;
-  color: #22c55e;
-  font-size: 22px;
+  text-align: right;
+  font-weight: 900;
+}
+
+.team-points {
+  color: var(--group-soft, #22c55e);
+  font-size: 20px;
+}
+
+.team-cups,
+.team-cup-difference {
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 14px;
+}
+
+/* ---------------- GROUP SCHEDULE ---------------- */
+
+.group-schedule-section {
+  width: min(1100px, calc(100% - 48px));
+  margin: 0 auto 100px;
+}
+
+.group-schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
+}
+
+.group-schedule-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 28px;
+  padding: 22px;
+  background:
+    linear-gradient(145deg, rgba(34, 197, 94, 0.12), rgba(255, 255, 255, 0.035)),
+    #07110a;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.28);
+  box-sizing: border-box;
+}
+
+.group-schedule-card .group-card-header {
+  margin-bottom: 14px;
+}
+
+.group-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.group-schedule-match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "number result"
+    "teamA teamA"
+    "teamB teamB";
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.group-schedule-match.is-played {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.25);
+}
+
+.schedule-match-number {
+  grid-area: number;
+  min-width: 0;
+  font-size: 0.76rem;
+  opacity: 0.72;
+}
+
+.group-schedule-match .schedule-team:nth-child(2) {
+  grid-area: teamA;
+}
+
+.group-schedule-match .schedule-team:nth-child(4) {
+  grid-area: teamB;
+}
+
+.schedule-team {
+  min-width: 0;
+  max-width: 100%;
+  font-weight: 800;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.schedule-team.is-winner {
+  color: #86efac;
+}
+
+.schedule-result {
+  grid-area: result;
+  justify-self: end;
+  min-width: 54px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border-radius: 999px;
+  text-align: center;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
   font-weight: 900;
 }
 
@@ -202,22 +376,23 @@
 }
 
 .bracket-scroll {
-  width: min(1100px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
   overflow-x: auto;
   padding-bottom: 18px;
 }
 
 .bracket-board {
-  min-width: 980px;
+  min-width: 1160px;
   display: grid;
-  grid-template-columns: 1.2fr 1fr 0.9fr;
-  gap: 28px;
-  align-items: center;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  align-items: start;
 }
 
 .bracket-round {
   position: relative;
+  min-width: 0;
 }
 
 .bracket-round h3 {
@@ -234,15 +409,22 @@
 }
 
 .bracket-round:nth-child(2) .bracket-matches {
-  gap: 90px;
+  padding-top: 42px;
+  gap: 52px;
 }
 
 .bracket-round:nth-child(3) .bracket-matches {
-  justify-content: center;
+  padding-top: 112px;
+  gap: 120px;
+}
+
+.bracket-round:nth-child(4) .bracket-matches {
+  padding-top: 250px;
 }
 
 .bracket-match {
   position: relative;
+  min-width: 0;
   padding: 16px;
   border-radius: 24px;
   background:
@@ -251,6 +433,7 @@
   border: 1px solid rgba(34, 197, 94, 0.24);
   box-shadow: 0 18px 58px rgba(0, 0, 0, 0.32);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .match-number {
@@ -263,35 +446,37 @@
 }
 
 .bracket-team {
-  min-height: 50px;
-  padding: 0 13px;
-  display: flex;
+  min-width: 0;
+  min-height: 56px;
+  padding: 12px 13px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 7px 10px;
   border-radius: 15px;
   background-color: rgba(255, 255, 255, 0.055);
   border: 1px solid rgba(255, 255, 255, 0.07);
+  box-sizing: border-box;
 }
 
 .bracket-team span {
+  min-width: 0;
   display: flex;
   align-items: center;
   gap: 9px;
-  min-width: 0;
   color: #ffffff;
   font-size: 15px;
   font-weight: 900;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
 }
 
 .bracket-team em {
-  flex-shrink: 0;
+  flex: 0 0 auto;
   min-width: 34px;
-  height: 28px;
-  padding: 0 8px;
+  max-width: 100%;
+  min-height: 28px;
+  padding: 5px 9px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -299,21 +484,54 @@
   background-color: rgba(34, 197, 94, 0.18);
   color: #86efac;
   font-size: 12px;
+  line-height: 1;
   font-style: normal;
   font-weight: 900;
+  white-space: nowrap;
 }
 
 .bracket-team strong {
-  flex-shrink: 0;
+  justify-self: end;
   color: #22c55e;
   font-size: 14px;
   font-weight: 900;
+  white-space: nowrap;
+}
+
+.bracket-team small:not(.bracket-winner-badge) {
+  grid-column: 1 / -1;
+  color: rgba(255, 255, 255, 0.64);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.bracket-team.is-winner {
+  border-color: rgba(0, 255, 102, 0.8);
+  background: rgba(0, 255, 102, 0.18);
+  box-shadow: 0 0 22px rgba(0, 255, 102, 0.22);
+}
+
+.bracket-winner-badge {
+  grid-column: 1 / -1;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 2px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #00ff66;
+  color: #041007;
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
 }
 
 .match-divider {
   width: 38px;
   height: 38px;
-  margin: -2px auto;
+  margin: -1px auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,7 +543,58 @@
   text-transform: uppercase;
 }
 
+.tournament-champion-card {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto 48px;
+  padding: 34px 28px;
+  border-radius: 28px;
+  text-align: center;
+  background:
+    radial-gradient(circle at top, rgba(0, 255, 102, 0.32), transparent 58%),
+    #071108;
+  border: 1px solid rgba(0, 255, 102, 0.45);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.tournament-champion-card p {
+  margin: 0 0 8px;
+  color: #00ff66;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+}
+
+.tournament-champion-card h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2.2rem, 6vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.06em;
+  overflow-wrap: anywhere;
+}
+
 /* ---------------- TABLET ---------------- */
+
+@media (max-width: 1150px) {
+  .bracket-scroll {
+    overflow-x: visible;
+  }
+
+  .bracket-board {
+    min-width: 0;
+    grid-template-columns: 1fr;
+    gap: 42px;
+  }
+
+  .bracket-round:nth-child(2) .bracket-matches,
+  .bracket-round:nth-child(3) .bracket-matches,
+  .bracket-round:nth-child(4) .bracket-matches {
+    padding-top: 0;
+    gap: 22px;
+  }
+}
 
 @media (max-width: 900px) {
   .tournament-hero {
@@ -334,21 +603,22 @@
   }
 
   .group-stage-section {
-    padding: 76px 18px 110px;
+    padding: 76px 18px 80px;
   }
 
-  .groups-grid {
+  .groups-grid,
+  .group-schedule-grid {
     grid-template-columns: 1fr;
     gap: 18px;
   }
 
-  .bracket-section {
-    padding: 0 18px 120px;
+  .group-schedule-section {
+    width: min(1100px, calc(100% - 36px));
+    margin-bottom: 80px;
   }
 
-  .bracket-board {
-    min-width: 900px;
-    gap: 20px;
+  .bracket-section {
+    padding: 0 18px 120px;
   }
 }
 
@@ -378,7 +648,7 @@
   }
 
   .group-stage-section {
-    padding: 64px 14px 90px;
+    padding: 64px 14px 70px;
   }
 
   .tournament-section-header {
@@ -398,7 +668,8 @@
     gap: 16px;
   }
 
-  .group-card {
+  .group-card,
+  .group-schedule-card {
     padding: 16px;
     border-radius: 24px;
   }
@@ -421,54 +692,58 @@
   }
 
   .group-table-row {
-    grid-template-columns: 46px 1fr 62px;
-    gap: 8px;
+    grid-template-columns: 36px minmax(0, 1fr) 42px 56px 42px;
+    gap: 6px;
     min-height: 52px;
-    padding: 0 10px;
+    padding: 0 8px;
     border-radius: 14px;
   }
 
   .group-table-head {
     min-height: 34px;
-    font-size: 10px;
-    letter-spacing: 0.1em;
+    font-size: 9px;
+    letter-spacing: 0.04em;
   }
 
   .team-rank {
-    width: 30px;
-    height: 30px;
-    font-size: 14px;
+    width: 28px;
+    height: 28px;
+    font-size: 13px;
   }
 
   .team-name {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   .team-points {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .team-cups,
+  .team-cup-difference {
+    font-size: 12px;
+  }
+
+  .group-schedule-section {
+    width: min(100% - 28px, 1100px);
+    margin-bottom: 70px;
+  }
+
+  .group-schedule-match {
+    padding: 12px;
   }
 
   .bracket-section {
     padding: 0 14px 100px;
   }
 
-  .bracket-scroll {
-    overflow-x: visible;
-  }
-
   .bracket-board {
-    min-width: 0;
-    grid-template-columns: 1fr;
     gap: 34px;
   }
 
   .bracket-round h3 {
-    font-size: 26px;
+    font-size: 30px;
     margin-bottom: 16px;
-  }
-
-  .bracket-round:nth-child(2) .bracket-matches {
-    gap: 18px;
   }
 
   .bracket-matches {
@@ -481,103 +756,83 @@
   }
 
   .bracket-team {
-    min-height: 48px;
-    padding: 0 11px;
+    min-height: 54px;
+    padding: 11px;
   }
 
   .bracket-team span {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .bracket-team strong {
     font-size: 13px;
+  }
+
+  .bracket-team em {
+    min-width: 30px;
+    min-height: 26px;
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .match-divider {
+    width: 36px;
+    height: 36px;
+  }
+
+  .tournament-champion-card {
+    width: calc(100% - 28px);
+    padding: 24px 16px;
+    margin-bottom: 42px;
+  }
+
+  .tournament-champion-card h2 {
+    font-size: clamp(2rem, 11vw, 3.8rem);
   }
 }
 
 /* ---------------- SMALL MOBILE ---------------- */
 
 @media (max-width: 380px) {
-  .group-card {
+  .group-card,
+  .group-schedule-card {
     padding: 14px;
   }
 
   .group-table-row {
-    grid-template-columns: 40px 1fr 54px;
-    padding: 0 8px;
+    grid-template-columns: 32px minmax(0, 1fr) 36px 48px 38px;
+    padding: 0 7px;
+  }
+
+  .group-table-head {
+    font-size: 8px;
   }
 
   .team-name {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .team-points {
-    font-size: 18px;
+    font-size: 16px;
   }
 
-  .bracket-team {
-    padding: 0 9px;
+  .team-cups,
+  .team-cup-difference {
+    font-size: 11px;
   }
 
   .bracket-team span {
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .bracket-team em {
     min-width: 28px;
-    height: 25px;
-    padding: 0 6px;
-    font-size: 11px;
+    min-height: 25px;
+    padding: 5px 7px;
+    font-size: 10px;
   }
 
   .bracket-team strong {
     font-size: 12px;
   }
-}
-
-.bracket-team.is-winner {
-  border-color: rgba(0, 255, 102, 0.8);
-  background: rgba(0, 255, 102, 0.18);
-  box-shadow: 0 0 22px rgba(0, 255, 102, 0.22);
-}
-
-.bracket-winner-badge {
-  grid-column: 1 / -1;
-  width: fit-content;
-  margin-top: 6px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: #00ff66;
-  color: #041007;
-  font-size: 0.72rem;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.tournament-champion-card {
-  width: min(1180px, calc(100% - 32px));
-  margin: 0 auto 28px;
-  padding: 28px;
-  border-radius: 28px;
-  text-align: center;
-  background:
-    radial-gradient(circle at top, rgba(0, 255, 102, 0.32), transparent 58%),
-    #071108;
-  border: 1px solid rgba(0, 255, 102, 0.45);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
-}
-
-.tournament-champion-card p {
-  margin: 0 0 8px;
-  color: #00ff66;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-}
-
-.tournament-champion-card h2 {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(2.2rem, 6vw, 5rem);
-  letter-spacing: -0.06em;
 }

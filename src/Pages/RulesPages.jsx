@@ -58,7 +58,17 @@ function RulesPage() {
         "Ansonsten gilt das Spiel als verloren."
       ],
       highlight: true
-    }
+    },
+
+    {
+      title: "Tabelle",
+      icon: "📊",
+      rules: [
+        "Die Plätze 1 und 2 sowie die vier besten Dritten kommen in die K.O Phase.",
+        "Bei Punktgleichheit entscheidet die Differenz der erzielten und kassierten Becher.",
+      
+      ]
+    },
   ];
 
   return (

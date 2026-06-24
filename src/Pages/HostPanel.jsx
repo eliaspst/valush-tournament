@@ -9,17 +9,265 @@ import { auth, db } from "../firebase";
 import defaultGroups from "../data/defaultGroups";
 import "./HostPanel.css";
 
+const WIN_POINTS = 3;
+
+const GROUP_MATCH_PAIRS = [
+  [0, 1],
+  [2, 3],
+  [0, 2],
+  [1, 3],
+  [0, 3],
+  [1, 2]
+];
+
 const winnerRoutes = {
-  qf1: { roundIndex: 1, matchIndex: 0, slot: "teamA" },
-  qf2: { roundIndex: 1, matchIndex: 0, slot: "teamB" },
-  qf3: { roundIndex: 1, matchIndex: 1, slot: "teamA" },
-  qf4: { roundIndex: 1, matchIndex: 1, slot: "teamB" },
-  sf1: { roundIndex: 2, matchIndex: 0, slot: "teamA" },
-  sf2: { roundIndex: 2, matchIndex: 0, slot: "teamB" }
+  af1: { roundIndex: 1, matchIndex: 0, slot: "teamA" },
+  af2: { roundIndex: 1, matchIndex: 0, slot: "teamB" },
+  af3: { roundIndex: 1, matchIndex: 1, slot: "teamA" },
+  af4: { roundIndex: 1, matchIndex: 1, slot: "teamB" },
+  af5: { roundIndex: 1, matchIndex: 2, slot: "teamA" },
+  af6: { roundIndex: 1, matchIndex: 2, slot: "teamB" },
+  af7: { roundIndex: 1, matchIndex: 3, slot: "teamA" },
+  af8: { roundIndex: 1, matchIndex: 3, slot: "teamB" },
+  qf1: { roundIndex: 2, matchIndex: 0, slot: "teamA" },
+  qf2: { roundIndex: 2, matchIndex: 0, slot: "teamB" },
+  qf3: { roundIndex: 2, matchIndex: 1, slot: "teamA" },
+  qf4: { roundIndex: 2, matchIndex: 1, slot: "teamB" },
+  sf1: { roundIndex: 3, matchIndex: 0, slot: "teamA" },
+  sf2: { roundIndex: 3, matchIndex: 0, slot: "teamB" }
 };
+
+function getNumber(value) {
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue)) {
+    return 0;
+  }
+
+  return parsedValue;
+}
+
+function isFilledNumber(value) {
+  return value !== "" && value !== null && value !== undefined && Number.isFinite(Number(value));
+}
+
+function getCupStats(team) {
+  const cupsFor = getNumber(team?.cupsFor);
+  const cupsAgainst = getNumber(team?.cupsAgainst);
+  const cupDifference = cupsFor - cupsAgainst;
+
+  return {
+    cupsFor,
+    cupsAgainst,
+    cupDifference
+  };
+}
+
+function formatCupDifference(cupDifference) {
+  if (cupDifference > 0) {
+    return `+${cupDifference}`;
+  }
+
+  return `${cupDifference}`;
+}
+
+function compareTeams(teamA, teamB) {
+  const pointsA = getNumber(teamA.points);
+  const pointsB = getNumber(teamB.points);
+
+  if (pointsB !== pointsA) {
+    return pointsB - pointsA;
+  }
+
+  const cupStatsA = getCupStats(teamA);
+  const cupStatsB = getCupStats(teamB);
+
+  if (cupStatsB.cupDifference !== cupStatsA.cupDifference) {
+    return cupStatsB.cupDifference - cupStatsA.cupDifference;
+  }
+
+  if (cupStatsB.cupsFor !== cupStatsA.cupsFor) {
+    return cupStatsB.cupsFor - cupStatsA.cupsFor;
+  }
+
+  return teamA.name.localeCompare(teamB.name);
+}
+
+function getCleanCupValue(value) {
+  if (!isFilledNumber(value)) {
+    return "";
+  }
+
+  return Number(value);
+}
+
+function createGroupMatchesFromGroups(groups, existingMatches = []) {
+  const existingMatchesById = new Map(
+    (existingMatches || []).map((match) => [match.id, match])
+  );
+
+  return groups.flatMap((group, groupIndex) =>
+    GROUP_MATCH_PAIRS.map(([teamAIndex, teamBIndex], matchIndex) => {
+      const id = `group-${groupIndex + 1}-match-${matchIndex + 1}`;
+      const existingMatch = existingMatchesById.get(id);
+      const teamA = group.teams?.[teamAIndex]?.name || `Team ${teamAIndex + 1}`;
+      const teamB = group.teams?.[teamBIndex]?.name || `Team ${teamBIndex + 1}`;
+      const cupsA = getCleanCupValue(existingMatch?.cupsA);
+      const cupsB = getCleanCupValue(existingMatch?.cupsB);
+      const isFinished =
+        Boolean(existingMatch?.isFinished) &&
+        isFilledNumber(cupsA) &&
+        isFilledNumber(cupsB);
+
+      return {
+        id,
+        groupIndex,
+        groupName: group.name,
+        matchNumber: matchIndex + 1,
+        teamAIndex,
+        teamBIndex,
+        teamA,
+        teamB,
+        cupsA,
+        cupsB,
+        isFinished
+      };
+    })
+  );
+}
+
+function buildDraftMatchResults(matches) {
+  return matches.reduce((draftResults, match) => {
+    draftResults[match.id] = {
+      cupsA: isFilledNumber(match.cupsA) ? String(match.cupsA) : "",
+      cupsB: isFilledNumber(match.cupsB) ? String(match.cupsB) : ""
+    };
+
+    return draftResults;
+  }, {});
+}
+
+function mergeDraftMatchResults(matches, currentDraftResults) {
+  return matches.reduce((draftResults, match) => {
+    const currentDraft = currentDraftResults?.[match.id];
+
+    draftResults[match.id] = {
+      cupsA:
+        currentDraft?.cupsA !== undefined
+          ? currentDraft.cupsA
+          : isFilledNumber(match.cupsA)
+            ? String(match.cupsA)
+            : "",
+      cupsB:
+        currentDraft?.cupsB !== undefined
+          ? currentDraft.cupsB
+          : isFilledNumber(match.cupsB)
+            ? String(match.cupsB)
+            : ""
+    };
+
+    return draftResults;
+  }, {});
+}
+
+function calculateGroupsFromMatches(baseGroups, groupMatches) {
+  const recalculatedGroups = baseGroups.map((group) => ({
+    ...group,
+    teams: (group.teams || []).map((team) => ({
+      ...team,
+      points: 0,
+      cupsFor: 0,
+      cupsAgainst: 0,
+      cupDifference: 0
+    }))
+  }));
+
+  groupMatches.forEach((match) => {
+    if (!match.isFinished || !isFilledNumber(match.cupsA) || !isFilledNumber(match.cupsB)) {
+      return;
+    }
+
+    const groupIndex =
+      typeof match.groupIndex === "number"
+        ? match.groupIndex
+        : recalculatedGroups.findIndex((group) => group.name === match.groupName);
+
+    const group = recalculatedGroups[groupIndex];
+
+    if (!group) {
+      return;
+    }
+
+    const teamAIndex =
+      typeof match.teamAIndex === "number"
+        ? match.teamAIndex
+        : group.teams.findIndex((team) => team.name === match.teamA);
+
+    const teamBIndex =
+      typeof match.teamBIndex === "number"
+        ? match.teamBIndex
+        : group.teams.findIndex((team) => team.name === match.teamB);
+
+    const teamA = group.teams[teamAIndex];
+    const teamB = group.teams[teamBIndex];
+
+    if (!teamA || !teamB) {
+      return;
+    }
+
+    const cupsA = Number(match.cupsA);
+    const cupsB = Number(match.cupsB);
+
+    teamA.cupsFor += cupsA;
+    teamA.cupsAgainst += cupsB;
+    teamB.cupsFor += cupsB;
+    teamB.cupsAgainst += cupsA;
+
+    if (cupsA > cupsB) {
+      teamA.points += WIN_POINTS;
+    }
+
+    if (cupsB > cupsA) {
+      teamB.points += WIN_POINTS;
+    }
+  });
+
+  return recalculatedGroups.map((group) => ({
+    ...group,
+    teams: group.teams.map((team) => ({
+      ...team,
+      cupDifference: getNumber(team.cupsFor) - getNumber(team.cupsAgainst)
+    }))
+  }));
+}
+
+function validateCupResult(cupsA, cupsB) {
+  if (!isFilledNumber(cupsA) || !isFilledNumber(cupsB)) {
+    return "Trage bitte beide Becherzahlen ein.";
+  }
+
+  const numberA = Number(cupsA);
+  const numberB = Number(cupsB);
+
+  if (numberA < 0 || numberB < 0 || numberA > 6 || numberB > 6) {
+    return "Die Becherzahl muss zwischen 0 und 6 liegen.";
+  }
+
+  if (numberA === numberB) {
+    return "Unentschieden sind in den Gruppenspielen nicht erlaubt.";
+  }
+
+  return "";
+}
 
 function HostPanel() {
   const [groups, setGroups] = useState(defaultGroups);
+  const [groupMatches, setGroupMatches] = useState(() =>
+    createGroupMatchesFromGroups(defaultGroups)
+  );
+  const [draftMatchResults, setDraftMatchResults] = useState(() =>
+    buildDraftMatchResults(createGroupMatchesFromGroups(defaultGroups))
+  );
   const [bracket, setBracket] = useState(null);
   const [hostUser, setHostUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,12 +295,15 @@ function HostPanel() {
       (snapshot) => {
         if (snapshot.exists()) {
           const tournamentData = snapshot.data();
+          const firebaseGroups = tournamentData.groups || defaultGroups;
+          const firebaseGroupMatches = createGroupMatchesFromGroups(
+            firebaseGroups,
+            tournamentData.groupMatches || []
+          );
 
-          if (tournamentData.groups) {
-            setGroups(tournamentData.groups);
-          } else {
-            setGroups(defaultGroups);
-          }
+          setGroups(firebaseGroups);
+          setGroupMatches(firebaseGroupMatches);
+          setDraftMatchResults(buildDraftMatchResults(firebaseGroupMatches));
 
           if (tournamentData.bracket) {
             setBracket(tournamentData.bracket);
@@ -60,7 +311,11 @@ function HostPanel() {
             setBracket(null);
           }
         } else {
+          const freshGroupMatches = createGroupMatchesFromGroups(defaultGroups);
+
           setGroups(defaultGroups);
+          setGroupMatches(freshGroupMatches);
+          setDraftMatchResults(buildDraftMatchResults(freshGroupMatches));
           setBracket(null);
         }
 
@@ -140,45 +395,223 @@ function HostPanel() {
       };
     });
 
+    const updatedGroupMatches = createGroupMatchesFromGroups(
+      updatedGroups,
+      groupMatches
+    );
+
     setGroups(updatedGroups);
+    setGroupMatches(updatedGroupMatches);
+    setDraftMatchResults((currentDraftResults) =>
+      mergeDraftMatchResults(updatedGroupMatches, currentDraftResults)
+    );
     setSaveMessage("");
   }
 
-  function handleTeamPointsChange(groupIndex, teamIndex, newPoints) {
-    const updatedGroups = groups.map((group, currentGroupIndex) => {
-      if (currentGroupIndex !== groupIndex) {
-        return group;
+  function handleGroupMatchResultChange(matchId, fieldName, newValue) {
+    setDraftMatchResults((currentDraftResults) => ({
+      ...currentDraftResults,
+      [matchId]: {
+        ...currentDraftResults[matchId],
+        [fieldName]: newValue
       }
+    }));
 
-      return {
-        ...group,
-        teams: group.teams.map((team, currentTeamIndex) => {
-          if (currentTeamIndex !== teamIndex) {
-            return team;
-          }
+    setSaveMessage("");
+    setFirebaseError("");
+  }
 
-          return {
-            ...team,
-            points: Number(newPoints)
-          };
-        })
-      };
-    });
+  async function saveGroupMatchesToFirebase(updatedGroups, updatedGroupMatches, message) {
+    const tournamentRef = doc(db, "tournaments", "current");
+
+    await setDoc(
+      tournamentRef,
+      {
+        groups: updatedGroups,
+        groupMatches: updatedGroupMatches,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
 
     setGroups(updatedGroups);
-    setSaveMessage("");
+    setGroupMatches(updatedGroupMatches);
+    setDraftMatchResults(buildDraftMatchResults(updatedGroupMatches));
+    setSaveMessage(message);
+    setFirebaseError("");
+  }
+
+  async function handleSaveGroupMatch(matchId) {
+    try {
+      const matchToSave = groupMatches.find((match) => match.id === matchId);
+      const draftResult = draftMatchResults[matchId];
+
+      if (!matchToSave || !draftResult) {
+        return;
+      }
+
+      const validationError = validateCupResult(
+        draftResult.cupsA,
+        draftResult.cupsB
+      );
+
+      if (validationError) {
+        setFirebaseError(validationError);
+        return;
+      }
+
+      const updatedGroupMatches = groupMatches.map((match) => {
+        if (match.id !== matchId) {
+          return match;
+        }
+
+        return {
+          ...match,
+          cupsA: Number(draftResult.cupsA),
+          cupsB: Number(draftResult.cupsB),
+          isFinished: true
+        };
+      });
+
+      const normalizedGroupMatches = createGroupMatchesFromGroups(
+        groups,
+        updatedGroupMatches
+      );
+
+      const recalculatedGroups = calculateGroupsFromMatches(
+        groups,
+        normalizedGroupMatches
+      );
+
+      await saveGroupMatchesToFirebase(
+        recalculatedGroups,
+        normalizedGroupMatches,
+        `${matchToSave.teamA} gegen ${matchToSave.teamB} wurde gespeichert.`
+      );
+    } catch (error) {
+      console.error("Fehler beim Speichern des Gruppenspiels:", error);
+      setFirebaseError("Das Gruppenspiel konnte nicht gespeichert werden.");
+    }
+  }
+
+  async function handleClearGroupMatch(matchId) {
+    try {
+      const matchToClear = groupMatches.find((match) => match.id === matchId);
+
+      if (!matchToClear) {
+        return;
+      }
+
+      const updatedGroupMatches = groupMatches.map((match) => {
+        if (match.id !== matchId) {
+          return match;
+        }
+
+        return {
+          ...match,
+          cupsA: "",
+          cupsB: "",
+          isFinished: false
+        };
+      });
+
+      const normalizedGroupMatches = createGroupMatchesFromGroups(
+        groups,
+        updatedGroupMatches
+      );
+
+      const recalculatedGroups = calculateGroupsFromMatches(
+        groups,
+        normalizedGroupMatches
+      );
+
+      await saveGroupMatchesToFirebase(
+        recalculatedGroups,
+        normalizedGroupMatches,
+        `${matchToClear.teamA} gegen ${matchToClear.teamB} wurde zurückgesetzt.`
+      );
+    } catch (error) {
+      console.error("Fehler beim Zurücksetzen des Gruppenspiels:", error);
+      setFirebaseError("Das Gruppenspiel konnte nicht zurückgesetzt werden.");
+    }
+  }
+
+  async function handleSaveAllGroupMatches() {
+    try {
+      for (const match of groupMatches) {
+        const draftResult = draftMatchResults[match.id];
+
+        if (!draftResult?.cupsA && !draftResult?.cupsB) {
+          continue;
+        }
+
+        const validationError = validateCupResult(
+          draftResult.cupsA,
+          draftResult.cupsB
+        );
+
+        if (validationError) {
+          setFirebaseError(`Spiel ${match.matchNumber} in ${match.groupName}: ${validationError}`);
+          return;
+        }
+      }
+
+      const updatedGroupMatches = groupMatches.map((match) => {
+        const draftResult = draftMatchResults[match.id];
+
+        if (!draftResult || !isFilledNumber(draftResult.cupsA) || !isFilledNumber(draftResult.cupsB)) {
+          return {
+            ...match,
+            cupsA: "",
+            cupsB: "",
+            isFinished: false
+          };
+        }
+
+        return {
+          ...match,
+          cupsA: Number(draftResult.cupsA),
+          cupsB: Number(draftResult.cupsB),
+          isFinished: true
+        };
+      });
+
+      const normalizedGroupMatches = createGroupMatchesFromGroups(
+        groups,
+        updatedGroupMatches
+      );
+
+      const recalculatedGroups = calculateGroupsFromMatches(
+        groups,
+        normalizedGroupMatches
+      );
+
+      await saveGroupMatchesToFirebase(
+        recalculatedGroups,
+        normalizedGroupMatches,
+        "Alle eingetragenen Gruppenspiele wurden gespeichert."
+      );
+    } catch (error) {
+      console.error("Fehler beim Speichern aller Gruppenspiele:", error);
+      setFirebaseError("Die Gruppenspiele konnten nicht gespeichert werden.");
+    }
   }
 
   function getSortedTeamsFromGroup(group) {
     return [...(group.teams || [])]
       .map((team, index) => ({
         ...team,
-        points: Number(team.points) || 0,
+        points: getNumber(team.points),
+        cupsFor: getNumber(team.cupsFor),
+        cupsAgainst: getNumber(team.cupsAgainst),
+        cupDifference: getNumber(team.cupDifference),
         originalIndex: index
       }))
       .sort((teamA, teamB) => {
-        if (teamB.points !== teamA.points) {
-          return teamB.points - teamA.points;
+        const teamComparison = compareTeams(teamA, teamB);
+
+        if (teamComparison !== 0) {
+          return teamComparison;
         }
 
         return teamA.originalIndex - teamB.originalIndex;
@@ -186,41 +619,58 @@ function HostPanel() {
   }
 
   function createQualifiedTeam(team, group, placement) {
+    const groupLetter = group.name.replace("Gruppe ", "");
+    const cupStats = getCupStats(team);
+
     return {
       name: team.name,
-      points: Number(team.points) || 0,
+      points: getNumber(team.points),
+      cupsFor: cupStats.cupsFor,
+      cupsAgainst: cupStats.cupsAgainst,
+      cupDifference: cupStats.cupDifference,
       groupName: group.name,
-      placement
+      placement,
+      seed: `${groupLetter}${placement}`
     };
   }
 
   async function handleGenerateKnockoutPhase() {
     try {
       const tournamentRef = doc(db, "tournaments", "current");
+      const normalizedGroupMatches = createGroupMatchesFromGroups(
+        groups,
+        groupMatches
+      );
 
-      const groupWinners = groups.map((group) => {
-        const sortedTeams = getSortedTeamsFromGroup(group);
-        return createQualifiedTeam(sortedTeams[0], group, "Gruppensieger");
-      });
+      const recalculatedGroups = calculateGroupsFromMatches(
+        groups,
+        normalizedGroupMatches
+      );
 
-      const bestSecondPlaces = groups
-        .map((group) => {
-          const sortedTeams = getSortedTeamsFromGroup(group);
-          return createQualifiedTeam(sortedTeams[1], group, "Bester Zweiter");
-        })
-        .sort((teamA, teamB) => {
-          if (teamB.points !== teamA.points) {
-            return teamB.points - teamA.points;
-          }
+      const sortedGroups = recalculatedGroups.map((group) => ({
+        ...group,
+        teams: getSortedTeamsFromGroup(group)
+      }));
 
-          return teamA.name.localeCompare(teamB.name);
-        })
-        .slice(0, 2);
+      const groupWinners = sortedGroups.map((group) =>
+        createQualifiedTeam(group.teams[0], group, 1)
+      );
 
-      const qualifiedTeams = [...groupWinners, ...bestSecondPlaces];
+      const groupSecondPlaces = sortedGroups.map((group) =>
+        createQualifiedTeam(group.teams[1], group, 2)
+      );
 
-      if (qualifiedTeams.length !== 8) {
-        setFirebaseError("Es müssen genau 8 Teams für das Viertelfinale vorhanden sein.");
+      const bestThirdPlaces = sortedGroups
+        .map((group) => createQualifiedTeam(group.teams[2], group, 3))
+        .sort(compareTeams)
+        .slice(0, 4);
+
+      if (
+        groupWinners.length !== 6 ||
+        groupSecondPlaces.length !== 6 ||
+        bestThirdPlaces.length !== 4
+      ) {
+        setFirebaseError("Für das Achtelfinale müssen 6 Gruppen mit jeweils 4 Teams vorhanden sein.");
         return;
       }
 
@@ -228,30 +678,83 @@ function HostPanel() {
         champion: null,
         rounds: [
           {
+            name: "Achtelfinale",
+            matches: [
+              {
+                id: "af1",
+                teamA: groupWinners[0],
+                teamB: bestThirdPlaces[3],
+                winner: null
+              },
+              {
+                id: "af2",
+                teamA: groupWinners[1],
+                teamB: bestThirdPlaces[2],
+                winner: null
+              },
+              {
+                id: "af3",
+                teamA: groupWinners[2],
+                teamB: bestThirdPlaces[1],
+                winner: null
+              },
+              {
+                id: "af4",
+                teamA: groupWinners[3],
+                teamB: bestThirdPlaces[0],
+                winner: null
+              },
+              {
+                id: "af5",
+                teamA: groupWinners[4],
+                teamB: groupSecondPlaces[5],
+                winner: null
+              },
+              {
+                id: "af6",
+                teamA: groupWinners[5],
+                teamB: groupSecondPlaces[4],
+                winner: null
+              },
+              {
+                id: "af7",
+                teamA: groupSecondPlaces[0],
+                teamB: groupSecondPlaces[3],
+                winner: null
+              },
+              {
+                id: "af8",
+                teamA: groupSecondPlaces[1],
+                teamB: groupSecondPlaces[2],
+                winner: null
+              }
+            ]
+          },
+          {
             name: "Viertelfinale",
             matches: [
               {
                 id: "qf1",
-                teamA: qualifiedTeams[0],
-                teamB: qualifiedTeams[7],
+                teamA: null,
+                teamB: null,
                 winner: null
               },
               {
                 id: "qf2",
-                teamA: qualifiedTeams[3],
-                teamB: qualifiedTeams[4],
+                teamA: null,
+                teamB: null,
                 winner: null
               },
               {
                 id: "qf3",
-                teamA: qualifiedTeams[1],
-                teamB: qualifiedTeams[6],
+                teamA: null,
+                teamB: null,
                 winner: null
               },
               {
                 id: "qf4",
-                teamA: qualifiedTeams[2],
-                teamB: qualifiedTeams[5],
+                teamA: null,
+                teamB: null,
                 winner: null
               }
             ]
@@ -290,14 +793,18 @@ function HostPanel() {
       await setDoc(
         tournamentRef,
         {
+          groups: recalculatedGroups,
+          groupMatches: normalizedGroupMatches,
           bracket: newBracket,
           updatedAt: serverTimestamp()
         },
         { merge: true }
       );
 
+      setGroups(recalculatedGroups);
+      setGroupMatches(normalizedGroupMatches);
       setBracket(newBracket);
-      setSaveMessage("K.O.-Phase wurde erfolgreich generiert.");
+      setSaveMessage("Achtelfinale wurde erfolgreich generiert.");
       setFirebaseError("");
     } catch (error) {
       console.error("Fehler beim Erstellen der K.O.-Phase:", error);
@@ -423,19 +930,21 @@ function HostPanel() {
 
   async function handleSaveTournament() {
     try {
-      const tournamentRef = doc(db, "tournaments", "current");
-
-      await setDoc(
-        tournamentRef,
-        {
-          groups,
-          updatedAt: serverTimestamp()
-        },
-        { merge: true }
+      const normalizedGroupMatches = createGroupMatchesFromGroups(
+        groups,
+        groupMatches
       );
 
-      setSaveMessage("Turnierdaten wurden online gespeichert.");
-      setFirebaseError("");
+      const recalculatedGroups = calculateGroupsFromMatches(
+        groups,
+        normalizedGroupMatches
+      );
+
+      await saveGroupMatchesToFirebase(
+        recalculatedGroups,
+        normalizedGroupMatches,
+        "Teams, Spielplan und Tabellen wurden online gespeichert."
+      );
     } catch (error) {
       setFirebaseError("Speichern fehlgeschlagen. Bist du eingeloggt?");
     }
@@ -444,11 +953,13 @@ function HostPanel() {
   async function handleResetTournament() {
     try {
       const tournamentRef = doc(db, "tournaments", "current");
+      const freshGroupMatches = createGroupMatchesFromGroups(defaultGroups);
 
       await setDoc(
         tournamentRef,
         {
           groups: defaultGroups,
+          groupMatches: freshGroupMatches,
           bracket: null,
           updatedAt: serverTimestamp()
         },
@@ -456,6 +967,8 @@ function HostPanel() {
       );
 
       setGroups(defaultGroups);
+      setGroupMatches(freshGroupMatches);
+      setDraftMatchResults(buildDraftMatchResults(freshGroupMatches));
       setBracket(null);
       setSaveMessage("Turnierdaten wurden zurückgesetzt.");
       setFirebaseError("");
@@ -478,6 +991,16 @@ function HostPanel() {
     }
 
     return team.name;
+  }
+
+  function getFinishedMatchesCount(groupIndex) {
+    return groupMatches.filter(
+      (match) => match.groupIndex === groupIndex && match.isFinished
+    ).length;
+  }
+
+  function getTotalFinishedMatchesCount() {
+    return groupMatches.filter((match) => match.isFinished).length;
   }
 
   function renderWinnerButton(match, team) {
@@ -517,7 +1040,7 @@ function HostPanel() {
         <section className="host-hero">
           <p className="host-kicker">Host Login</p>
           <h1>Host Bereich</h1>
-          <p>Melde dich an, um Teams und Punkte zu bearbeiten.</p>
+          <p>Melde dich an, um Teams, Gruppenspiele und K.O.-Phase zu bearbeiten.</p>
         </section>
 
         <form className="host-login-form" onSubmit={handleLogin}>
@@ -558,8 +1081,8 @@ function HostPanel() {
         <p className="host-kicker">Host Bereich</p>
         <h1>Turnier verwalten</h1>
         <p>
-          Änderungen werden in Firebase gespeichert und automatisch bei allen
-          Zuschauern aktualisiert.
+          Ergebnisse werden in Firebase gespeichert. Punkte, getroffene Becher
+          und Becherverhältnis werden automatisch berechnet.
         </p>
 
         <button type="button" className="logout-button" onClick={handleLogout}>
@@ -567,60 +1090,38 @@ function HostPanel() {
         </button>
       </section>
 
-      <section className="host-editor">
-        {groups.map((group, groupIndex) => (
-          <article className="host-group-card" key={group.name}>
-            <h2>{group.name}</h2>
-
-            <div className="host-team-list">
-              {group.teams.map((team, teamIndex) => (
-                <div
-                  className="host-team-row"
-                  key={`${group.name}-${teamIndex}`}
-                >
-                  <label>
-                    Teamname
-                    <input
-                      type="text"
-                      value={team.name}
-                      onChange={(event) =>
-                        handleTeamNameChange(
-                          groupIndex,
-                          teamIndex,
-                          event.target.value
-                        )
-                      }
-                    />
-                  </label>
-
-                  <label>
-                    Punkte
-                    <input
-                      type="number"
-                      min="0"
-                      value={team.points}
-                      onChange={(event) =>
-                        handleTeamPointsChange(
-                          groupIndex,
-                          teamIndex,
-                          event.target.value
-                        )
-                      }
-                    />
-                  </label>
-                </div>
-              ))}
-            </div>
+      <section className="host-admin-overview">
+        <div className="host-status-grid">
+          <article className="host-status-card">
+            <span>Gruppenspiele</span>
+            <strong>{getTotalFinishedMatchesCount()}/36</strong>
+            <p>gespeichert</p>
           </article>
-        ))}
 
-        <div className="host-actions">
+          <article className="host-status-card">
+            <span>Punkte-System</span>
+            <strong>{WIN_POINTS}</strong>
+            <p>Punkte pro Sieg</p>
+          </article>
+
+          <article className="host-status-card">
+            <span>K.O.-Phase</span>
+            <strong>{bracket ? "aktiv" : "offen"}</strong>
+            <p>{bracket ? "Turnierbaum erstellt" : "noch nicht erstellt"}</p>
+          </article>
+        </div>
+
+        <div className="host-global-actions">
+          <button type="button" onClick={handleSaveAllGroupMatches}>
+            Alle Gruppenspiele speichern
+          </button>
+
           <button type="button" onClick={handleSaveTournament}>
-            Speichern
+            Teams & Tabellen speichern
           </button>
 
           <button type="button" onClick={handleGenerateKnockoutPhase}>
-            K.O.-Phase generieren
+            Achtelfinale generieren
           </button>
 
           <button
@@ -636,12 +1137,235 @@ function HostPanel() {
             className="reset-button"
             onClick={handleResetTournament}
           >
-            Zurücksetzen
+            Alles zurücksetzen
           </button>
         </div>
 
         {saveMessage && <p className="save-message">{saveMessage}</p>}
         {firebaseError && <p className="host-error-message">{firebaseError}</p>}
+      </section>
+
+      <section className="host-editor">
+        <div className="host-section-header">
+          <p className="host-kicker">Teams</p>
+          <h2>Teams bearbeiten</h2>
+          <p>
+            Die Punkte und Becherwerte werden nicht mehr manuell eingetragen,
+            sondern automatisch aus den Gruppenspiel-Ergebnissen berechnet.
+          </p>
+        </div>
+
+        {groups.map((group, groupIndex) => (
+          <article className="host-group-card" key={group.name}>
+            <h2>{group.name}</h2>
+
+            <div className="host-team-list">
+              {group.teams.map((team, teamIndex) => {
+                const cupStats = getCupStats(team);
+
+                return (
+                  <div
+                    className="host-team-row"
+                    key={`${group.name}-${teamIndex}`}
+                  >
+                    <label>
+                      Teamname
+                      <input
+                        type="text"
+                        value={team.name}
+                        onChange={(event) =>
+                          handleTeamNameChange(
+                            groupIndex,
+                            teamIndex,
+                            event.target.value
+                          )
+                        }
+                      />
+                    </label>
+
+                    <div className="host-team-stats">
+                      <span>{getNumber(team.points)} Pkt.</span>
+                      <span>
+                        {cupStats.cupsFor}:{cupStats.cupsAgainst}
+                      </span>
+                      <span>{formatCupDifference(cupStats.cupDifference)}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="host-group-results-section">
+        <div className="host-section-header">
+          <p className="host-kicker">Gruppenphase</p>
+          <h2>Ergebnisse eintragen</h2>
+          <p>
+            Trage pro Spiel die getroffenen Becher ein. Nach dem Speichern wird
+            die Gruppentabelle automatisch neu berechnet.
+          </p>
+        </div>
+
+        <div className="host-result-groups-grid">
+          {groups.map((group, groupIndex) => {
+            const matchesForGroup = groupMatches.filter(
+              (match) => match.groupIndex === groupIndex
+            );
+            const sortedTeams = getSortedTeamsFromGroup(group);
+
+            return (
+              <article className="host-results-group-card" key={group.name}>
+                <div className="host-results-card-header">
+                  <div>
+                    <p className="host-kicker">Spielplan</p>
+                    <h3>{group.name}</h3>
+                  </div>
+
+                  <span className="host-progress-badge">
+                    {getFinishedMatchesCount(groupIndex)}/6 gespielt
+                  </span>
+                </div>
+
+                <div className="host-group-standings">
+                  <div className="host-standings-row host-standings-head">
+                    <span>#</span>
+                    <span>Team</span>
+                    <span>Pk</span>
+                    <span>Becher</span>
+                    <span>+/-</span>
+                  </div>
+
+                  {sortedTeams.map((team, index) => {
+                    const cupStats = getCupStats(team);
+
+                    return (
+                      <div
+                        className="host-standings-row"
+                        key={`${group.name}-standing-${team.name}`}
+                      >
+                        <span>{index + 1}</span>
+                        <span>{team.name}</span>
+                        <span>{getNumber(team.points)}</span>
+                        <span>
+                          {cupStats.cupsFor}:{cupStats.cupsAgainst}
+                        </span>
+                        <span>{formatCupDifference(cupStats.cupDifference)}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="host-matches-list">
+                  {matchesForGroup.map((match) => {
+                    const draftResult = draftMatchResults[match.id] || {
+                      cupsA: "",
+                      cupsB: ""
+                    };
+                    const teamAWins =
+                      match.isFinished && Number(match.cupsA) > Number(match.cupsB);
+                    const teamBWins =
+                      match.isFinished && Number(match.cupsB) > Number(match.cupsA);
+
+                    return (
+                      <div
+                        className={
+                          match.isFinished
+                            ? "host-result-match-card is-saved"
+                            : "host-result-match-card"
+                        }
+                        key={match.id}
+                      >
+                        <div className="host-result-match-top">
+                          <span>Spiel {match.matchNumber}</span>
+                          <strong className="host-match-status">
+                            {match.isFinished ? "gespeichert" : "offen"}
+                          </strong>
+                        </div>
+
+                        <div className="host-result-input-row">
+                          <label
+                            className={
+                              teamAWins
+                                ? "host-result-team-side is-winner"
+                                : "host-result-team-side"
+                            }
+                          >
+                            <span className="host-result-team-name">
+                              {match.teamA}
+                            </span>
+                            <input
+                              className="host-result-score-input"
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              max="6"
+                              value={draftResult.cupsA}
+                              onChange={(event) =>
+                                handleGroupMatchResultChange(
+                                  match.id,
+                                  "cupsA",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </label>
+
+                          <span className="host-result-divider">:</span>
+
+                          <label
+                            className={
+                              teamBWins
+                                ? "host-result-team-side is-winner"
+                                : "host-result-team-side"
+                            }
+                          >
+                            <span className="host-result-team-name">
+                              {match.teamB}
+                            </span>
+                            <input
+                              className="host-result-score-input"
+                              type="number"
+                              inputMode="numeric"
+                              min="0"
+                              max="6"
+                              value={draftResult.cupsB}
+                              onChange={(event) =>
+                                handleGroupMatchResultChange(
+                                  match.id,
+                                  "cupsB",
+                                  event.target.value
+                                )
+                              }
+                            />
+                          </label>
+                        </div>
+
+                        <div className="host-result-buttons">
+                          <button
+                            type="button"
+                            onClick={() => handleSaveGroupMatch(match.id)}
+                          >
+                            Ergebnis speichern
+                          </button>
+
+                          <button
+                            type="button"
+                            className="host-secondary-button"
+                            onClick={() => handleClearGroupMatch(match.id)}
+                          >
+                            Löschen
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       <section className="host-knockout-section">

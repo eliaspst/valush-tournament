@@ -35,14 +35,14 @@ function Homepage() {
             <div className="homepage-info-card">
               <h3>Ort</h3>
               <p>
-                Das Tunier findet in der ... statt.
+                Das Tunier findet in Valush Garten in Möhringen statt.
               </p>
             </div>
 
             <div className="homepage-info-card">
               <h3>Tunierstart</h3>
               <p>
-                Das Tunier beginnt am 27. Juni 2026 um 13:00 Uhr. Sei pünktlich!
+                Das Tunier beginnt am 27. Juni 2026 um 14:15 Uhr. Sei pünktlich!
               </p>
             </div>
 

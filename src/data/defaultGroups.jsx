@@ -18,7 +18,7 @@ const defaultGroups = [
     ]
   },
   {
-    name: "Gruppe 3",
+    name: "Gruppe 1887",
     teams: [
       { name: "Team C1", points: 9 },
       { name: "Team C2", points: 4 },
