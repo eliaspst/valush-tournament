@@ -59,7 +59,11 @@ function Homepage() {
       <section className="homepage-tree-section">
         <div className="homepage-tree-image">
           <div className="homepage-image-placeholder">
-            <span>Placeholder: Turnierbaum Bild</span>
+            <img
+            className="homepage-"
+            src={`${process.env.PUBLIC_URL}/GruppenBild.jpg`}
+            alt="GruppenBild"
+          />
           </div>
 
           <div className="homepage-tree-overlay">
