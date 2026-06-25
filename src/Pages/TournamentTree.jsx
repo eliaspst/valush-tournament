@@ -6,6 +6,58 @@ import "./TournamentTree.css";
 
 const WIN_POINTS = 3;
 
+const FIXED_GROUP_MATCH_SCHEDULES = [
+  [
+    ["Zapf-Zombies", "Assozial statt National"],
+    ["Drink or get Drunk", "Lifeguards"],
+    ["Zapf-Zombies", "Drink or get Drunk"],
+    ["Assozial statt National", "Lifeguards"],
+    ["Zapf-Zombies", "Lifeguards"],
+    ["Assozial statt National", "Zapf-Zombies"]
+  ],
+  [
+    ["Bierschutzbeauftragte", "Warnstufe Claudimona"],
+    ["Mallorca Allstars", "Luchos"],
+    ["Bierschutzbeauftragte", "Mallorca Allstars"],
+    ["Warnstufe Claudimona", "Luchos"],
+    ["Bierschutzbeauftragte", "Luchos"],
+    ["Warnstufe Claudimona", "Mallorca Allstars"]
+  ],
+  [
+    ["Bieraten", "Paulao Brauer"],
+    ["Promille Polizei", "Beachclub United"],
+    ["Bieraten", "Beachclub United"],
+    ["Paulao Brauer", "Beachclub United"],
+    ["Bieraten", "Promille Polizei"],
+    ["Paulao Brauer", "Promille Polizei"]
+  ],
+  [
+    ["Team Captain", "Die Unteraicher Jungs"],
+    ["Team Big Balls", "Team Sonne"],
+    ["Team Captain", "Team Big Balls"],
+    ["Die Unteraicher Jungs", "Team Sonne"],
+    ["Team Captain", "Team Sonne"],
+    ["Die Unteraicher Jungs", "Team Big Balls"]
+  ],
+  [
+    ["Palmen aus Plastik", "Bierus Maximus"],
+    ["Pamela Andersonne", "K(akh)is"],
+    ["Palmen aus Plastik", "K(akh)is"],
+    ["Pamela Andersonne", "Bierus Maximus"],
+    ["Bierus Maximus", "K(akh)is"],
+    ["Pamela Andersonne", "Palmen aus Plastik"]
+  ],
+  [
+    ["Safari Babes", "Chrissi trifft, Mattis singt"],
+    ["Pierre du lolly", "Beer Bowl Champions"],
+    ["Safari Babes", "Pierre du lolly"],
+    ["Chrissi trifft, Mattis singt", "Beer Bowl Champions"],
+    ["Safari Babes", "Beer Bowl Champions"],
+    ["Chrissi trifft, Mattis singt", "Pierre du lolly"]
+  ]
+];
+
+
 function getNumber(value) {
   return Number(value) || 0;
 }
@@ -52,13 +104,13 @@ function formatCupDifference(cupDifference) {
   return `${cupDifference}`;
 }
 
-function createBracketTeam(team, groupName, placement) {
+function createBracketTeam(team, groupName, placement, groupNumber) {
   if (!team) {
     return createPlaceholderTeam("Offen");
   }
 
-  const groupLetter = groupName.replace("Gruppe ", "");
   const cupStats = getCupStats(team);
+  const seed = groupNumber ? `G${groupNumber}-${placement}` : `${groupName}-${placement}`;
 
   return {
     name: team.name,
@@ -66,20 +118,20 @@ function createBracketTeam(team, groupName, placement) {
     cupsFor: cupStats.cupsFor,
     cupsAgainst: cupStats.cupsAgainst,
     cupDifference: cupStats.cupDifference,
-    seed: `${groupLetter}${placement}`,
+    seed,
     groupName,
     placement
   };
 }
 
-function createPlaceholderTeam(name) {
+function createPlaceholderTeam(name, seed = "") {
   return {
     name,
     points: null,
     cupsFor: null,
     cupsAgainst: null,
     cupDifference: null,
-    seed: "",
+    seed,
     groupName: ""
   };
 }
@@ -98,6 +150,13 @@ function normalizeTeamName(team) {
   }
 
   return team?.name || "";
+}
+
+function normalizeScheduleTeamName(teamName) {
+  return normalizeTeamName(teamName)
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function getMatchScoreValue(value) {
@@ -132,7 +191,38 @@ function createGroupSlug(groupName) {
     .replace(/[^a-z0-9-]/g, "");
 }
 
-function createDefaultGroupMatches(groups) {
+function getScheduledTeamName(teams, scheduledTeamName) {
+  const foundTeam = teams.find(
+    (team) =>
+      normalizeScheduleTeamName(team?.name) ===
+      normalizeScheduleTeamName(scheduledTeamName)
+  );
+
+  return foundTeam?.name || scheduledTeamName || "Offen";
+}
+
+function countMatchingScheduledTeams(schedule, teams) {
+  const teamNames = new Set(
+    teams.map((team) => normalizeScheduleTeamName(team?.name))
+  );
+  const scheduledTeamNames = new Set(
+    schedule.flat().map((teamName) => normalizeScheduleTeamName(teamName))
+  );
+
+  return [...scheduledTeamNames].filter((teamName) => teamNames.has(teamName))
+    .length;
+}
+
+function getFixedGroupSchedule(group, groupIndex) {
+  const teams = Array.isArray(group.teams) ? group.teams : [];
+  const exactSchedule = FIXED_GROUP_MATCH_SCHEDULES.find(
+    (schedule) => countMatchingScheduledTeams(schedule, teams) === 4
+  );
+
+  return exactSchedule || FIXED_GROUP_MATCH_SCHEDULES[groupIndex] || null;
+}
+
+function createFallbackGroupSchedule(teams) {
   const pairings = [
     [0, 1],
     [2, 3],
@@ -142,16 +232,27 @@ function createDefaultGroupMatches(groups) {
     [1, 2]
   ];
 
-  return groups.flatMap((group) => {
+  return pairings.map(([teamAIndex, teamBIndex]) => [
+    teams[teamAIndex]?.name || "Offen",
+    teams[teamBIndex]?.name || "Offen"
+  ]);
+}
+
+function createDefaultGroupMatches(groups) {
+  return groups.flatMap((group, groupIndex) => {
     const teams = Array.isArray(group.teams) ? group.teams : [];
     const groupSlug = createGroupSlug(group.name);
+    const fixedSchedule = getFixedGroupSchedule(group, groupIndex);
+    const groupSchedule = fixedSchedule || createFallbackGroupSchedule(teams);
 
-    return pairings.map(([teamAIndex, teamBIndex], index) => ({
-      id: `${groupSlug}-${index + 1}`,
+    return groupSchedule.map(([teamAName, teamBName], index) => ({
+      id: `group-${groupIndex + 1}-match-${index + 1}`,
+      legacyId: `${groupSlug}-${index + 1}`,
+      groupIndex,
       groupName: group.name,
       matchNumber: index + 1,
-      teamA: teams[teamAIndex]?.name || "Offen",
-      teamB: teams[teamBIndex]?.name || "Offen",
+      teamA: getScheduledTeamName(teams, teamAName),
+      teamB: getScheduledTeamName(teams, teamBName),
       cupsA: null,
       cupsB: null,
       isFinished: false
@@ -166,14 +267,33 @@ function createGroupSchedule(groups, firebaseGroupMatches) {
     return defaultGroupMatches;
   }
 
+  const safeFirebaseGroupMatches = firebaseGroupMatches.filter(Boolean);
   const firebaseGroupMatchesById = new Map(
-    firebaseGroupMatches
-      .filter((match) => match && match.id)
+    safeFirebaseGroupMatches
+      .filter((match) => match.id)
       .map((match) => [match.id, match])
   );
 
+  function findFirebaseMatch(defaultMatch) {
+    return (
+      firebaseGroupMatchesById.get(defaultMatch.id) ||
+      firebaseGroupMatchesById.get(defaultMatch.legacyId) ||
+      safeFirebaseGroupMatches.find(
+        (match) =>
+          match.groupIndex === defaultMatch.groupIndex &&
+          match.matchNumber === defaultMatch.matchNumber
+      ) ||
+      safeFirebaseGroupMatches.find(
+        (match) =>
+          match.groupName === defaultMatch.groupName &&
+          match.matchNumber === defaultMatch.matchNumber
+      ) ||
+      null
+    );
+  }
+
   return defaultGroupMatches.map((defaultMatch) => {
-    const firebaseMatch = firebaseGroupMatchesById.get(defaultMatch.id);
+    const firebaseMatch = findFirebaseMatch(defaultMatch);
 
     if (!firebaseMatch) {
       return defaultMatch;
@@ -188,12 +308,13 @@ function createGroupSchedule(groups, firebaseGroupMatches) {
 
     return {
       ...defaultMatch,
-      ...firebaseMatch,
       id: defaultMatch.id,
+      legacyId: defaultMatch.legacyId,
+      groupIndex: defaultMatch.groupIndex,
       groupName: defaultMatch.groupName,
       matchNumber: defaultMatch.matchNumber,
-      teamA: normalizeTeamName(firebaseMatch.teamA) || defaultMatch.teamA,
-      teamB: normalizeTeamName(firebaseMatch.teamB) || defaultMatch.teamB,
+      teamA: defaultMatch.teamA,
+      teamB: defaultMatch.teamB,
       cupsA,
       cupsB,
       isFinished:
@@ -214,7 +335,7 @@ function calculateGroupsFromGroupMatches(groups, groupMatches) {
     }));
 
     const teamsByName = new Map(
-      calculatedTeams.map((team) => [team.name, team])
+      calculatedTeams.map((team) => [normalizeScheduleTeamName(team.name), team])
     );
 
     groupMatches
@@ -223,8 +344,12 @@ function calculateGroupsFromGroupMatches(groups, groupMatches) {
       .forEach((match) => {
         const cupsA = getMatchScoreValue(match.cupsA);
         const cupsB = getMatchScoreValue(match.cupsB);
-        const teamA = teamsByName.get(normalizeTeamName(match.teamA));
-        const teamB = teamsByName.get(normalizeTeamName(match.teamB));
+        const teamA = teamsByName.get(
+          normalizeScheduleTeamName(normalizeTeamName(match.teamA))
+        );
+        const teamB = teamsByName.get(
+          normalizeScheduleTeamName(normalizeTeamName(match.teamB))
+        );
 
         if (!teamA || !teamB || cupsA === null || cupsB === null) {
           return;
@@ -273,19 +398,31 @@ function getTeamOrPlaceholder(team, placeholderName) {
   };
 }
 
+function createBestThirdPlaces(sortedGroups) {
+  return sortedGroups
+    .map((group) =>
+      createBracketTeam(group.teams[2], group.name, 3, group.groupNumber)
+    )
+    .sort(compareTeams)
+    .slice(0, 4)
+    .map((team, index) => ({
+      ...team,
+      originalSeed: team.seed,
+      seed: `BD${index + 1}`,
+      bestThirdRank: index + 1
+    }));
+}
+
 function createFallbackBracketRounds(sortedGroups) {
   const groupWinners = sortedGroups.map((group) =>
-    createBracketTeam(group.teams[0], group.name, 1)
+    createBracketTeam(group.teams[0], group.name, 1, group.groupNumber)
   );
 
   const groupSecondPlaces = sortedGroups.map((group) =>
-    createBracketTeam(group.teams[1], group.name, 2)
+    createBracketTeam(group.teams[1], group.name, 2, group.groupNumber)
   );
 
-  const bestThirdPlaces = sortedGroups
-    .map((group) => createBracketTeam(group.teams[2], group.name, 3))
-    .sort(compareTeams)
-    .slice(0, 4);
+  const bestThirdPlaces = createBestThirdPlaces(sortedGroups);
 
   return [
     {
@@ -293,50 +430,50 @@ function createFallbackBracketRounds(sortedGroups) {
       matches: [
         {
           id: "preview-af1",
-          top: groupWinners[0] || createPlaceholderTeam("Offen"),
-          bottom: bestThirdPlaces[3] || createPlaceholderTeam("Bester 3."),
+          top: groupWinners[0] || createPlaceholderTeam("G1-1", "G1-1"),
+          bottom: bestThirdPlaces[3] || createPlaceholderTeam("BD4", "BD4"),
           winner: null
         },
         {
           id: "preview-af2",
-          top: groupWinners[1] || createPlaceholderTeam("Offen"),
-          bottom: bestThirdPlaces[2] || createPlaceholderTeam("Bester 3."),
+          top: groupSecondPlaces[3] || createPlaceholderTeam("G4-2", "G4-2"),
+          bottom: groupSecondPlaces[4] || createPlaceholderTeam("G5-2", "G5-2"),
           winner: null
         },
         {
           id: "preview-af3",
-          top: groupWinners[2] || createPlaceholderTeam("Offen"),
-          bottom: bestThirdPlaces[1] || createPlaceholderTeam("Bester 3."),
+          top: groupWinners[2] || createPlaceholderTeam("G3-1", "G3-1"),
+          bottom: groupSecondPlaces[5] || createPlaceholderTeam("G6-2", "G6-2"),
           winner: null
         },
         {
           id: "preview-af4",
-          top: groupWinners[3] || createPlaceholderTeam("Offen"),
-          bottom: bestThirdPlaces[0] || createPlaceholderTeam("Bester 3."),
+          top: groupSecondPlaces[1] || createPlaceholderTeam("G2-2", "G2-2"),
+          bottom: bestThirdPlaces[1] || createPlaceholderTeam("BD2", "BD2"),
           winner: null
         },
         {
           id: "preview-af5",
-          top: groupWinners[4] || createPlaceholderTeam("Offen"),
-          bottom: groupSecondPlaces[5] || createPlaceholderTeam("Zweiter Gruppe"),
+          top: groupWinners[1] || createPlaceholderTeam("G2-1", "G2-1"),
+          bottom: bestThirdPlaces[2] || createPlaceholderTeam("BD3", "BD3"),
           winner: null
         },
         {
           id: "preview-af6",
-          top: groupWinners[5] || createPlaceholderTeam("Offen"),
-          bottom: groupSecondPlaces[4] || createPlaceholderTeam("Zweiter Gruppe"),
+          top: groupSecondPlaces[2] || createPlaceholderTeam("G3-2", "G3-2"),
+          bottom: groupWinners[3] || createPlaceholderTeam("G4-1", "G4-1"),
           winner: null
         },
         {
           id: "preview-af7",
-          top: groupSecondPlaces[0] || createPlaceholderTeam("Zweiter Gruppe"),
-          bottom: groupSecondPlaces[3] || createPlaceholderTeam("Zweiter Gruppe"),
+          top: groupWinners[4] || createPlaceholderTeam("G5-1", "G5-1"),
+          bottom: groupSecondPlaces[0] || createPlaceholderTeam("G1-2", "G1-2"),
           winner: null
         },
         {
           id: "preview-af8",
-          top: groupSecondPlaces[1] || createPlaceholderTeam("Zweiter Gruppe"),
-          bottom: groupSecondPlaces[2] || createPlaceholderTeam("Zweiter Gruppe"),
+          top: groupWinners[5] || createPlaceholderTeam("G6-1", "G6-1"),
+          bottom: bestThirdPlaces[0] || createPlaceholderTeam("BD1", "BD1"),
           winner: null
         }
       ]
@@ -401,20 +538,55 @@ function createFallbackBracketRounds(sortedGroups) {
   ];
 }
 
+function mergeFirebaseRoundWithFallback(firebaseRound, fallbackRound) {
+  if (!fallbackRound) {
+    return firebaseRound;
+  }
+
+  return {
+    name: fallbackRound.name,
+    matches: fallbackRound.matches.map((fallbackMatch, index) => {
+      const firebaseMatch = firebaseRound.matches[index];
+
+      if (!firebaseMatch) {
+        return fallbackMatch;
+      }
+
+      return {
+        ...fallbackMatch,
+        id: firebaseMatch.id || fallbackMatch.id,
+        winner: firebaseMatch.winner || fallbackMatch.winner || null
+      };
+    })
+  };
+}
+
 function createFirebaseBracketRounds(bracket, fallbackBracketRounds) {
   if (!bracket || !bracket.rounds) {
     return [];
   }
 
-  const firebaseRounds = bracket.rounds.map((round) => ({
-    name: round.name,
-    matches: round.matches.map((match, index) => ({
-      id: match.id || `${round.name}-${index}`,
-      top: getTeamOrPlaceholder(match.teamA, "Noch offen"),
-      bottom: getTeamOrPlaceholder(match.teamB, "Noch offen"),
-      winner: match.winner || null
-    }))
-  }));
+  const fallbackRoundsByName = new Map(
+    fallbackBracketRounds.map((round) => [round.name, round])
+  );
+
+  const firebaseRounds = bracket.rounds.map((round) => {
+    const fallbackRound = fallbackRoundsByName.get(round.name);
+
+    if (round.name === "Achtelfinale") {
+      return mergeFirebaseRoundWithFallback(round, fallbackRound);
+    }
+
+    return {
+      name: round.name,
+      matches: round.matches.map((match, index) => ({
+        id: match.id || `${round.name}-${index}`,
+        top: getTeamOrPlaceholder(match.teamA, "Noch offen"),
+        bottom: getTeamOrPlaceholder(match.teamB, "Noch offen"),
+        winner: match.winner || null
+      }))
+    };
+  });
 
   const hasRoundOfSixteen = firebaseRounds.some(
     (round) => round.name === "Achtelfinale"
@@ -424,9 +596,7 @@ function createFirebaseBracketRounds(bracket, fallbackBracketRounds) {
     return firebaseRounds;
   }
 
-  const fallbackRoundOfSixteen = fallbackBracketRounds.find(
-    (round) => round.name === "Achtelfinale"
-  );
+  const fallbackRoundOfSixteen = fallbackRoundsByName.get("Achtelfinale");
 
   if (!fallbackRoundOfSixteen) {
     return firebaseRounds;
@@ -505,8 +675,9 @@ function TournamentTree() {
     ? calculateGroupsFromGroupMatches(groups, groupSchedule)
     : groups;
 
-  const sortedGroups = calculatedGroups.map((group) => ({
+  const sortedGroups = calculatedGroups.map((group, index) => ({
     ...group,
+    groupNumber: index + 1,
     teams: [...group.teams].sort(compareTeams)
   }));
 
@@ -541,7 +712,7 @@ function TournamentTree() {
           <p className="tournament-kicker">Gruppenphase</p>
           <h2>6 Gruppen · 24 Teams</h2>
           <p>
-            Jede Gruppe besteht aus 4 Teams. Die Tabelle sortiert automatisch
+            Jede Gruppe besteht aus 4 Teams. Die Tabelle sortiert
             nach Punkten, Becherverhältnis und getroffenen Bechern.
           </p>
         </div>
@@ -595,10 +766,6 @@ function TournamentTree() {
         <div className="tournament-section-header">
           <p className="tournament-kicker">Gruppenspiele</p>
           <h2>Spielplan der Gruppenphase</h2>
-          <p>
-            Sobald der Host ein Ergebnis speichert, werden Punkte,
-            Becherverhältnis und getroffene Becher automatisch neu berechnet.
-          </p>
         </div>
 
         <div className="group-schedule-grid">

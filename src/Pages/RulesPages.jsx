@@ -17,7 +17,8 @@ function RulesPage() {
       icon: "✊",
       rules: [
         "Am Anfang wird bis 1 geschnickt.",
-        "Der Gewinner darf entscheiden, ob sein Team anfängt oder den Rückwurf nimmt."
+        "Der Gewinner darf entscheiden, ob sein Team anfängt oder den Rückwurf nimmt.",
+        "Dabei hat nur das Team Rückwurf, welches nicht angefangen hat."
       ]
     },
     {

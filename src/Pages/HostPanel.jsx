@@ -11,13 +11,64 @@ import "./HostPanel.css";
 
 const WIN_POINTS = 3;
 
-const GROUP_MATCH_PAIRS = [
+const FALLBACK_GROUP_MATCH_PAIRS = [
   [0, 1],
   [2, 3],
   [0, 2],
   [1, 3],
   [0, 3],
   [1, 2]
+];
+
+const FIXED_GROUP_MATCH_SCHEDULES = [
+  [
+    ["Ossi / Max", "Anton P. / Ebba"],
+    ["Tike / Luki", "Jana / Julia"],
+    ["Ossi / Max", "Tike / Luki"],
+    ["Anton P. / Ebba", "Jana / Julia"],
+    ["Ossi / Max", "Jana / Julia"],
+    ["Anton P. / Ebba", "Tike / Luki"]
+  ],
+  [
+    ["Valush / Louis", "Claudius / Simona"],
+    ["Tom / Nils", "Caro / Ben"],
+    ["Valush / Louis", "Tom / Nils"],
+    ["Claudius / Simona", "Caro / Ben"],
+    ["Valush / Louis", "Caro / Ben"],
+    ["Claudius / Simona", "Tom / Nils"]
+  ],
+  [
+    ["Emil P. / Elli", "Paula / Paulo"],
+    ["Dilara / Weber", "Nico / Flipper"],
+    ["Emil P. / Elli", "Nico / Flipper"],
+    ["Paula / Paulo", "Nico / Flipper"],
+    ["Emil P. / Elli", "Dilara / Weber"],
+    ["Paula / Paulo", "Dilara / Weber"]
+  ],
+  [
+    ["Anne M. / Cece", "Timmy / Dennis"],
+    ["Friedrich / Dave", "Laura / Erik"],
+    ["Anne M. / Cece", "Friedrich / Dave"],
+    ["Timmy / Dennis", "Laura / Erik"],
+    ["Anne M. / Cece", "Laura / Erik"],
+    ["Timmy / Dennis", "Friedrich / Dave"]
+  ],
+  [
+    ["Stolle / Lola", "Flo / Dafina"],
+    ["Anne H. / Breitung", "Noah / Katrin"],
+    ["Stolle / Lola", "Noah / Katrin"],
+    ["Anne H. / Breitung", "Flo / Dafina"],
+    ["Flo / Dafina", "Noah / Katrin"],
+    ["Anne H. / Breitung", "Stolle / Lola"]
+  ],
+  [
+    ["Nila / Stella", "Chrissi / Mattis"],
+    ["Pierre / HGW", "Mato / Annelie"],
+    ["Nila / Stella", "Pierre / HGW"],
+    ["Chrissi / Mattis", "Mato / Annelie"],
+    ["Nila / Stella", "Mato / Annelie"],
+    ["Chrissi / Mattis", "Pierre / HGW"]
+  ]
 ];
 
 const winnerRoutes = {
@@ -101,39 +152,145 @@ function getCleanCupValue(value) {
   return Number(value);
 }
 
-function createGroupMatchesFromGroups(groups, existingMatches = []) {
-  const existingMatchesById = new Map(
-    (existingMatches || []).map((match) => [match.id, match])
+function normalizeScheduleTeamName(teamName) {
+  return String(teamName || "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function findTeamIndexByName(teams, teamName) {
+  const normalizedTeamName = normalizeScheduleTeamName(teamName);
+
+  return (teams || []).findIndex(
+    (team) => normalizeScheduleTeamName(team?.name) === normalizedTeamName
+  );
+}
+
+function getScheduledTeam(teams, scheduledTeamName, fallbackIndex) {
+  const foundIndex = findTeamIndexByName(teams, scheduledTeamName);
+
+  if (foundIndex >= 0) {
+    return {
+      index: foundIndex,
+      name: teams[foundIndex]?.name || scheduledTeamName
+    };
+  }
+
+  return {
+    index: fallbackIndex,
+    name: teams?.[fallbackIndex]?.name || scheduledTeamName || `Team ${fallbackIndex + 1}`
+  };
+}
+
+function countMatchingScheduledTeams(schedule, teams) {
+  const teamNames = new Set(
+    (teams || []).map((team) => normalizeScheduleTeamName(team?.name))
+  );
+  const scheduledTeamNames = new Set(
+    schedule.flat().map((teamName) => normalizeScheduleTeamName(teamName))
   );
 
-  return groups.flatMap((group, groupIndex) =>
-    GROUP_MATCH_PAIRS.map(([teamAIndex, teamBIndex], matchIndex) => {
+  return [...scheduledTeamNames].filter((teamName) => teamNames.has(teamName))
+    .length;
+}
+
+function getFixedGroupSchedule(group, groupIndex) {
+  const teams = Array.isArray(group?.teams) ? group.teams : [];
+  const exactSchedule = FIXED_GROUP_MATCH_SCHEDULES.find(
+    (schedule) => countMatchingScheduledTeams(schedule, teams) === 4
+  );
+
+  return exactSchedule || FIXED_GROUP_MATCH_SCHEDULES[groupIndex] || null;
+}
+
+function createFallbackGroupSchedule(teams) {
+  return FALLBACK_GROUP_MATCH_PAIRS.map(([teamAIndex, teamBIndex]) => [
+    teams?.[teamAIndex]?.name || `Team ${teamAIndex + 1}`,
+    teams?.[teamBIndex]?.name || `Team ${teamBIndex + 1}`
+  ]);
+}
+
+function createGroupSlug(groupName) {
+  return String(groupName || "")
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+}
+
+function getExistingMatchForSlot(existingMatchesById, existingMatches, group, groupIndex, matchIndex) {
+  const id = `group-${groupIndex + 1}-match-${matchIndex + 1}`;
+  const legacyId = `${createGroupSlug(group.name)}-${matchIndex + 1}`;
+
+  return (
+    existingMatchesById.get(id) ||
+    existingMatchesById.get(legacyId) ||
+    existingMatches.find(
+      (match) =>
+        match?.groupIndex === groupIndex &&
+        match?.matchNumber === matchIndex + 1
+    ) ||
+    existingMatches.find(
+      (match) =>
+        match?.groupName === group.name &&
+        match?.matchNumber === matchIndex + 1
+    ) ||
+    null
+  );
+}
+
+function createGroupMatchesFromGroups(groups, existingMatches = []) {
+  const safeExistingMatches = Array.isArray(existingMatches) ? existingMatches : [];
+  const existingMatchesById = new Map(
+    safeExistingMatches
+      .filter((match) => match && match.id)
+      .map((match) => [match.id, match])
+  );
+
+  return groups.flatMap((group, groupIndex) => {
+    const teams = Array.isArray(group.teams) ? group.teams : [];
+    const fixedSchedule = getFixedGroupSchedule(group, groupIndex);
+    const groupSchedule = fixedSchedule || createFallbackGroupSchedule(teams);
+
+    return groupSchedule.map(([scheduledTeamA, scheduledTeamB], matchIndex) => {
       const id = `group-${groupIndex + 1}-match-${matchIndex + 1}`;
-      const existingMatch = existingMatchesById.get(id);
-      const teamA = group.teams?.[teamAIndex]?.name || `Team ${teamAIndex + 1}`;
-      const teamB = group.teams?.[teamBIndex]?.name || `Team ${teamBIndex + 1}`;
+      const legacyId = `${createGroupSlug(group.name)}-${matchIndex + 1}`;
+      const existingMatch = getExistingMatchForSlot(
+        existingMatchesById,
+        safeExistingMatches,
+        group,
+        groupIndex,
+        matchIndex
+      );
+      const scheduledTeamAData = getScheduledTeam(teams, scheduledTeamA, 0);
+      const scheduledTeamBData = getScheduledTeam(teams, scheduledTeamB, 1);
       const cupsA = getCleanCupValue(existingMatch?.cupsA);
       const cupsB = getCleanCupValue(existingMatch?.cupsB);
       const isFinished =
-        Boolean(existingMatch?.isFinished) &&
+        Boolean(existingMatch?.isFinished || existingMatch?.finished) &&
         isFilledNumber(cupsA) &&
         isFilledNumber(cupsB);
 
       return {
         id,
+        legacyId,
         groupIndex,
         groupName: group.name,
         matchNumber: matchIndex + 1,
-        teamAIndex,
-        teamBIndex,
-        teamA,
-        teamB,
+        teamAIndex: scheduledTeamAData.index,
+        teamBIndex: scheduledTeamBData.index,
+        teamA: scheduledTeamAData.name,
+        teamB: scheduledTeamBData.name,
         cupsA,
         cupsB,
         isFinished
       };
-    })
-  );
+    });
+  });
 }
 
 function buildDraftMatchResults(matches) {
@@ -198,15 +355,24 @@ function calculateGroupsFromMatches(baseGroups, groupMatches) {
       return;
     }
 
+    const savedTeamAIndex =
+      typeof match.teamAIndex === "number" ? match.teamAIndex : -1;
+    const savedTeamBIndex =
+      typeof match.teamBIndex === "number" ? match.teamBIndex : -1;
+
     const teamAIndex =
-      typeof match.teamAIndex === "number"
-        ? match.teamAIndex
-        : group.teams.findIndex((team) => team.name === match.teamA);
+      group.teams[savedTeamAIndex] &&
+      normalizeScheduleTeamName(group.teams[savedTeamAIndex].name) ===
+        normalizeScheduleTeamName(match.teamA)
+        ? savedTeamAIndex
+        : findTeamIndexByName(group.teams, match.teamA);
 
     const teamBIndex =
-      typeof match.teamBIndex === "number"
-        ? match.teamBIndex
-        : group.teams.findIndex((team) => team.name === match.teamB);
+      group.teams[savedTeamBIndex] &&
+      normalizeScheduleTeamName(group.teams[savedTeamBIndex].name) ===
+        normalizeScheduleTeamName(match.teamB)
+        ? savedTeamBIndex
+        : findTeamIndexByName(group.teams, match.teamB);
 
     const teamA = group.teams[teamAIndex];
     const teamB = group.teams[teamBIndex];
@@ -619,7 +785,9 @@ function HostPanel() {
   }
 
   function createQualifiedTeam(team, group, placement) {
-    const groupLetter = group.name.replace("Gruppe ", "");
+    const groupSeed = group.groupNumber
+      ? `G${group.groupNumber}`
+      : group.name.replace("Gruppe ", "G");
     const cupStats = getCupStats(team);
 
     return {
@@ -630,8 +798,21 @@ function HostPanel() {
       cupDifference: cupStats.cupDifference,
       groupName: group.name,
       placement,
-      seed: `${groupLetter}${placement}`
+      seed: `${groupSeed}-${placement}`
     };
+  }
+
+  function createBestThirdPlaces(sortedGroups) {
+    return sortedGroups
+      .map((group) => createQualifiedTeam(group.teams[2], group, 3))
+      .sort(compareTeams)
+      .slice(0, 4)
+      .map((team, index) => ({
+        ...team,
+        originalSeed: team.seed,
+        seed: `BD${index + 1}`,
+        bestThirdRank: index + 1
+      }));
   }
 
   async function handleGenerateKnockoutPhase() {
@@ -647,8 +828,9 @@ function HostPanel() {
         normalizedGroupMatches
       );
 
-      const sortedGroups = recalculatedGroups.map((group) => ({
+      const sortedGroups = recalculatedGroups.map((group, index) => ({
         ...group,
+        groupNumber: index + 1,
         teams: getSortedTeamsFromGroup(group)
       }));
 
@@ -660,10 +842,7 @@ function HostPanel() {
         createQualifiedTeam(group.teams[1], group, 2)
       );
 
-      const bestThirdPlaces = sortedGroups
-        .map((group) => createQualifiedTeam(group.teams[2], group, 3))
-        .sort(compareTeams)
-        .slice(0, 4);
+      const bestThirdPlaces = createBestThirdPlaces(sortedGroups);
 
       if (
         groupWinners.length !== 6 ||
@@ -688,44 +867,44 @@ function HostPanel() {
               },
               {
                 id: "af2",
-                teamA: groupWinners[1],
-                teamB: bestThirdPlaces[2],
+                teamA: groupSecondPlaces[3],
+                teamB: groupSecondPlaces[4],
                 winner: null
               },
               {
                 id: "af3",
                 teamA: groupWinners[2],
-                teamB: bestThirdPlaces[1],
-                winner: null
-              },
-              {
-                id: "af4",
-                teamA: groupWinners[3],
-                teamB: bestThirdPlaces[0],
-                winner: null
-              },
-              {
-                id: "af5",
-                teamA: groupWinners[4],
                 teamB: groupSecondPlaces[5],
                 winner: null
               },
               {
+                id: "af4",
+                teamA: groupSecondPlaces[1],
+                teamB: bestThirdPlaces[1],
+                winner: null
+              },
+              {
+                id: "af5",
+                teamA: groupWinners[1],
+                teamB: bestThirdPlaces[2],
+                winner: null
+              },
+              {
                 id: "af6",
-                teamA: groupWinners[5],
-                teamB: groupSecondPlaces[4],
+                teamA: groupSecondPlaces[2],
+                teamB: groupWinners[3],
                 winner: null
               },
               {
                 id: "af7",
-                teamA: groupSecondPlaces[0],
-                teamB: groupSecondPlaces[3],
+                teamA: groupWinners[4],
+                teamB: groupSecondPlaces[0],
                 winner: null
               },
               {
                 id: "af8",
-                teamA: groupSecondPlaces[1],
-                teamB: groupSecondPlaces[2],
+                teamA: groupWinners[5],
+                teamB: bestThirdPlaces[0],
                 winner: null
               }
             ]
@@ -990,7 +1169,7 @@ function HostPanel() {
       return "Noch offen";
     }
 
-    return team.name;
+    return team.seed ? `${team.seed} ${team.name}` : team.name;
   }
 
   function getFinishedMatchesCount(groupIndex) {
@@ -1080,10 +1259,6 @@ function HostPanel() {
       <section className="host-hero">
         <p className="host-kicker">Host Bereich</p>
         <h1>Turnier verwalten</h1>
-        <p>
-          Ergebnisse werden in Firebase gespeichert. Punkte, getroffene Becher
-          und Becherverhältnis werden automatisch berechnet.
-        </p>
 
         <button type="button" className="logout-button" onClick={handleLogout}>
           Ausloggen
