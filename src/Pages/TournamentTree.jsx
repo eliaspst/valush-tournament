@@ -49,11 +49,11 @@ const FIXED_GROUP_MATCH_SCHEDULES = [
   ],
   [
     ["Safari Babes", "Chrissi trifft, Mattis singt"],
-    ["Pierre du lolly", "Beer Bowl Champions"],
-    ["Safari Babes", "Pierre du lolly"],
+    ["Bierbauerbeiter", "Beer Bowl Champions"],
+    ["Safari Babes", "Bierbauerbeiter"],
     ["Chrissi trifft, Mattis singt", "Beer Bowl Champions"],
     ["Safari Babes", "Beer Bowl Champions"],
-    ["Chrissi trifft, Mattis singt", "Pierre du lolly"]
+    ["Chrissi trifft, Mattis singt", "Bierbauerbeiter"]
   ]
 ];
 
@@ -670,10 +670,7 @@ function TournamentTree() {
   }
 
   const groupSchedule = createGroupSchedule(groups, firebaseGroupMatches);
-  const hasPlayedGroupMatches = groupSchedule.some(hasCompleteGroupMatchResult);
-  const calculatedGroups = hasPlayedGroupMatches
-    ? calculateGroupsFromGroupMatches(groups, groupSchedule)
-    : groups;
+  const calculatedGroups = groups;
 
   const sortedGroups = calculatedGroups.map((group, index) => ({
     ...group,

@@ -22,52 +22,52 @@ const FALLBACK_GROUP_MATCH_PAIRS = [
 
 const FIXED_GROUP_MATCH_SCHEDULES = [
   [
-    ["Ossi / Max", "Anton P. / Ebba"],
-    ["Tike / Luki", "Jana / Julia"],
-    ["Ossi / Max", "Tike / Luki"],
-    ["Anton P. / Ebba", "Jana / Julia"],
-    ["Ossi / Max", "Jana / Julia"],
-    ["Anton P. / Ebba", "Tike / Luki"]
+    ["Zapf-Zombies", "Assozial statt National"],
+    ["Drink or get Drunk", "Lifeguards"],
+    ["Zapf-Zombies", "Drink or get Drunk"],
+    ["Assozial statt National", "Lifeguards"],
+    ["Zapf-Zombies", "Lifeguards"],
+    ["Assozial statt National", "Drink or get Drunk"]
   ],
   [
-    ["Valush / Louis", "Claudius / Simona"],
-    ["Tom / Nils", "Caro / Ben"],
-    ["Valush / Louis", "Tom / Nils"],
-    ["Claudius / Simona", "Caro / Ben"],
-    ["Valush / Louis", "Caro / Ben"],
-    ["Claudius / Simona", "Tom / Nils"]
+    ["Bierschutzbeauftragte", "Warnstufe Claudimona"],
+    ["Mallorca Allstars", "Luchos"],
+    ["Bierschutzbeauftragte", "Mallorca Allstars"],
+    ["Warnstufe Claudimona", "Luchos"],
+    ["Bierschutzbeauftragte", "Luchos"],
+    ["Warnstufe Claudimona", "Mallorca Allstars"]
   ],
   [
-    ["Emil P. / Elli", "Paula / Paulo"],
-    ["Dilara / Weber", "Nico / Flipper"],
-    ["Emil P. / Elli", "Nico / Flipper"],
-    ["Paula / Paulo", "Nico / Flipper"],
-    ["Emil P. / Elli", "Dilara / Weber"],
-    ["Paula / Paulo", "Dilara / Weber"]
+    ["Bieraten", "Paulao Brauer"],
+    ["Promille Polizei", "Beachclub United"],
+    ["Bieraten", "Beachclub United"],
+    ["Paulao Brauer", "Beachclub United"],
+    ["Bieraten", "Promille Polizei"],
+    ["Paulao Brauer", "Promille Polizei"]
   ],
   [
-    ["Anne M. / Cece", "Timmy / Dennis"],
-    ["Friedrich / Dave", "Laura / Erik"],
-    ["Anne M. / Cece", "Friedrich / Dave"],
-    ["Timmy / Dennis", "Laura / Erik"],
-    ["Anne M. / Cece", "Laura / Erik"],
-    ["Timmy / Dennis", "Friedrich / Dave"]
+    ["Team Captain", "Die Unteraicher Jungs"],
+    ["Team Big Balls", "Team Sonne"],
+    ["Team Captain", "Team Big Balls"],
+    ["Die Unteraicher Jungs", "Team Sonne"],
+    ["Team Captain", "Team Sonne"],
+    ["Die Unteraicher Jungs", "Team Big Balls"]
   ],
   [
-    ["Stolle / Lola", "Flo / Dafina"],
-    ["Anne H. / Breitung", "Noah / Katrin"],
-    ["Stolle / Lola", "Noah / Katrin"],
-    ["Anne H. / Breitung", "Flo / Dafina"],
-    ["Flo / Dafina", "Noah / Katrin"],
-    ["Anne H. / Breitung", "Stolle / Lola"]
+    ["Palmen aus Plastik", "Bierus Maximus"],
+    ["Pamela Andersonne", "K(akh)is"],
+    ["Palmen aus Plastik", "K(akh)is"],
+    ["Pamela Andersonne", "Bierus Maximus"],
+    ["Bierus Maximus", "K(akh)is"],
+    ["Pamela Andersonne", "Palmen aus Plastik"]
   ],
   [
-    ["Nila / Stella", "Chrissi / Mattis"],
-    ["Pierre / HGW", "Mato / Annelie"],
-    ["Nila / Stella", "Pierre / HGW"],
-    ["Chrissi / Mattis", "Mato / Annelie"],
-    ["Nila / Stella", "Mato / Annelie"],
-    ["Chrissi / Mattis", "Pierre / HGW"]
+    ["Safari Babes", "Chrissi trifft, Mattis singt"],
+    ["Bierbauerbeiter", "Beer Bowl Champions"],
+    ["Safari Babes", "Bierbauerbeiter"],
+    ["Chrissi trifft, Mattis singt", "Beer Bowl Champions"],
+    ["Safari Babes", "Beer Bowl Champions"],
+    ["Chrissi trifft, Mattis singt", "Bierbauerbeiter"]
   ]
 ];
 
@@ -159,11 +159,27 @@ function normalizeScheduleTeamName(teamName) {
     .trim();
 }
 
-function findTeamIndexByName(teams, teamName) {
+function isScheduledTeamNameMatch(teamName, scheduledTeamName) {
   const normalizedTeamName = normalizeScheduleTeamName(teamName);
+  const normalizedScheduledTeamName = normalizeScheduleTeamName(scheduledTeamName);
+  const normalizedTeamNameWithoutInfo = normalizeScheduleTeamName(
+    String(teamName || "").replace(/\([^)]*\)/g, "")
+  );
+  const normalizedScheduledTeamNameWithoutInfo = normalizeScheduleTeamName(
+    String(scheduledTeamName || "").replace(/\([^)]*\)/g, "")
+  );
 
-  return (teams || []).findIndex(
-    (team) => normalizeScheduleTeamName(team?.name) === normalizedTeamName
+  return (
+    normalizedTeamName === normalizedScheduledTeamName ||
+    normalizedTeamNameWithoutInfo === normalizedScheduledTeamName ||
+    normalizedTeamName === normalizedScheduledTeamNameWithoutInfo ||
+    normalizedTeamNameWithoutInfo === normalizedScheduledTeamNameWithoutInfo
+  );
+}
+
+function findTeamIndexByName(teams, teamName) {
+  return (teams || []).findIndex((team) =>
+    isScheduledTeamNameMatch(team?.name, teamName)
   );
 }
 
@@ -184,24 +200,23 @@ function getScheduledTeam(teams, scheduledTeamName, fallbackIndex) {
 }
 
 function countMatchingScheduledTeams(schedule, teams) {
-  const teamNames = new Set(
-    (teams || []).map((team) => normalizeScheduleTeamName(team?.name))
-  );
-  const scheduledTeamNames = new Set(
-    schedule.flat().map((teamName) => normalizeScheduleTeamName(teamName))
-  );
-
-  return [...scheduledTeamNames].filter((teamName) => teamNames.has(teamName))
-    .length;
+  return schedule
+    .flat()
+    .filter((teamName, index, allTeamNames) => allTeamNames.indexOf(teamName) === index)
+    .filter((scheduledTeamName) =>
+      (teams || []).some((team) =>
+        isScheduledTeamNameMatch(team?.name, scheduledTeamName)
+      )
+    ).length;
 }
 
-function getFixedGroupSchedule(group, groupIndex) {
+function getFixedGroupSchedule(group) {
   const teams = Array.isArray(group?.teams) ? group.teams : [];
   const exactSchedule = FIXED_GROUP_MATCH_SCHEDULES.find(
     (schedule) => countMatchingScheduledTeams(schedule, teams) === 4
   );
 
-  return exactSchedule || FIXED_GROUP_MATCH_SCHEDULES[groupIndex] || null;
+  return exactSchedule || null;
 }
 
 function createFallbackGroupSchedule(teams) {
@@ -253,7 +268,7 @@ function createGroupMatchesFromGroups(groups, existingMatches = []) {
 
   return groups.flatMap((group, groupIndex) => {
     const teams = Array.isArray(group.teams) ? group.teams : [];
-    const fixedSchedule = getFixedGroupSchedule(group, groupIndex);
+    const fixedSchedule = getFixedGroupSchedule(group);
     const groupSchedule = fixedSchedule || createFallbackGroupSchedule(teams);
 
     return groupSchedule.map(([scheduledTeamA, scheduledTeamB], matchIndex) => {
@@ -266,8 +281,17 @@ function createGroupMatchesFromGroups(groups, existingMatches = []) {
         groupIndex,
         matchIndex
       );
-      const scheduledTeamAData = getScheduledTeam(teams, scheduledTeamA, 0);
-      const scheduledTeamBData = getScheduledTeam(teams, scheduledTeamB, 1);
+      const fallbackPair = FALLBACK_GROUP_MATCH_PAIRS[matchIndex] || [0, 1];
+      const scheduledTeamAData = getScheduledTeam(
+        teams,
+        scheduledTeamA,
+        fallbackPair[0]
+      );
+      const scheduledTeamBData = getScheduledTeam(
+        teams,
+        scheduledTeamB,
+        fallbackPair[1]
+      );
       const cupsA = getCleanCupValue(existingMatch?.cupsA);
       const cupsB = getCleanCupValue(existingMatch?.cupsB);
       const isFinished =

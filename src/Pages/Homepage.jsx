@@ -17,7 +17,7 @@ function Homepage() {
               THE TABLES ARE READY
             </p>
 
-            <h1>Valush Bierpong Tunier 2026
+            <h1>Valush Bierpong Turnier 2026
             </h1>
             <p className="homepage-hero-text">
               Ob Anfänger(Mato) oder Profi, hier ist für jeden etwas dabei. 
@@ -35,14 +35,14 @@ function Homepage() {
             <div className="homepage-info-card">
               <h3>Ort</h3>
               <p>
-                Das Tunier findet in Valush Garten in Möhringen statt.
+                Das Turnier findet in Valush Garten in Möhringen statt.
               </p>
             </div>
 
             <div className="homepage-info-card">
-              <h3>Tunierstart</h3>
+              <h3>Turnierstart</h3>
               <p>
-                Das Tunier beginnt am 27. Juni 2026 um 14:15 Uhr. Sei pünktlich!
+                Das Turnier beginnt am 27. Juni 2026 um 14:15 Uhr. Sei pünktlich!
               </p>
             </div>
 
