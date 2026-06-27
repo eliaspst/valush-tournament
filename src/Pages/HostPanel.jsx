@@ -11,15 +11,6 @@ import "./HostPanel.css";
 
 const WIN_POINTS = 3;
 
-const FALLBACK_GROUP_MATCH_PAIRS = [
-  [0, 1],
-  [2, 3],
-  [0, 2],
-  [1, 3],
-  [0, 3],
-  [1, 2]
-];
-
 const FIXED_GROUP_MATCH_SCHEDULES = [
   [
     ["Zapf-Zombies", "Assozial statt National"],
@@ -210,17 +201,38 @@ function countMatchingScheduledTeams(schedule, teams) {
     ).length;
 }
 
-function getFixedGroupSchedule(group) {
+function getFixedGroupSchedule(group, groupIndex) {
   const teams = Array.isArray(group?.teams) ? group.teams : [];
   const exactSchedule = FIXED_GROUP_MATCH_SCHEDULES.find(
     (schedule) => countMatchingScheduledTeams(schedule, teams) === 4
   );
 
-  return exactSchedule || null;
+  return exactSchedule || FIXED_GROUP_MATCH_SCHEDULES[groupIndex] || null;
+}
+
+function getFallbackTeamIndex(groupIndex, scheduledTeamName, fallbackIndex) {
+  const defaultGroup = defaultGroups[groupIndex];
+  const defaultTeams = Array.isArray(defaultGroup?.teams) ? defaultGroup.teams : [];
+  const defaultTeamIndex = findTeamIndexByName(defaultTeams, scheduledTeamName);
+
+  if (defaultTeamIndex >= 0) {
+    return defaultTeamIndex;
+  }
+
+  return fallbackIndex;
 }
 
 function createFallbackGroupSchedule(teams) {
-  return FALLBACK_GROUP_MATCH_PAIRS.map(([teamAIndex, teamBIndex]) => [
+  const pairings = [
+    [0, 1],
+    [2, 3],
+    [0, 2],
+    [1, 3],
+    [0, 3],
+    [1, 2]
+  ];
+
+  return pairings.map(([teamAIndex, teamBIndex]) => [
     teams?.[teamAIndex]?.name || `Team ${teamAIndex + 1}`,
     teams?.[teamBIndex]?.name || `Team ${teamBIndex + 1}`
   ]);
@@ -268,7 +280,7 @@ function createGroupMatchesFromGroups(groups, existingMatches = []) {
 
   return groups.flatMap((group, groupIndex) => {
     const teams = Array.isArray(group.teams) ? group.teams : [];
-    const fixedSchedule = getFixedGroupSchedule(group);
+    const fixedSchedule = getFixedGroupSchedule(group, groupIndex);
     const groupSchedule = fixedSchedule || createFallbackGroupSchedule(teams);
 
     return groupSchedule.map(([scheduledTeamA, scheduledTeamB], matchIndex) => {
@@ -281,16 +293,15 @@ function createGroupMatchesFromGroups(groups, existingMatches = []) {
         groupIndex,
         matchIndex
       );
-      const fallbackPair = FALLBACK_GROUP_MATCH_PAIRS[matchIndex] || [0, 1];
       const scheduledTeamAData = getScheduledTeam(
         teams,
         scheduledTeamA,
-        fallbackPair[0]
+        getFallbackTeamIndex(groupIndex, scheduledTeamA, 0)
       );
       const scheduledTeamBData = getScheduledTeam(
         teams,
         scheduledTeamB,
-        fallbackPair[1]
+        getFallbackTeamIndex(groupIndex, scheduledTeamB, 1)
       );
       const cupsA = getCleanCupValue(existingMatch?.cupsA);
       const cupsB = getCleanCupValue(existingMatch?.cupsB);

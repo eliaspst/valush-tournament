@@ -13,7 +13,7 @@ const FIXED_GROUP_MATCH_SCHEDULES = [
     ["Zapf-Zombies", "Drink or get Drunk"],
     ["Assozial statt National", "Lifeguards"],
     ["Zapf-Zombies", "Lifeguards"],
-    ["Assozial statt National", "Zapf-Zombies"]
+    ["Assozial statt National", "Drink or get Drunk"]
   ],
   [
     ["Bierschutzbeauftragte", "Warnstufe Claudimona"],
